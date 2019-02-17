@@ -52,3 +52,23 @@ summary(contrast(lsmB, method="trt.vs.ctrl", adj="mvt", ref=1),
 lsmTC <- lsmeans(modelTC, ~ fTC)
 summary(contrast(lsmTC, method="trt.vs.ctrl", adj="mvt"),
         infer=c(T,T), level=0.95, side=">")
+
+plot(y ~ A, data=react.data, xaxt="n", type="n") # Suppress x-axis, pts
+axis(1, at=seq(1,2,1)) # Add x-axis with tick marks from 1 to 2 by 1
+text(y ~ A, B, cex=0.75, data=react.data) # Plot z vs A using B label
+mtext("B=1,2,3", side=3, adj=1, line=1) # Margin text, top-rt, line 1
+abline(h=0) # Horizontal line at zero
+
+interaction.plot(x.factor = react.data$fA, trace.factor = react.data$fB,
+                 response = react.data$y, type ="b",
+                 xlab ="A", trace.label ="B", ylab ="Mean of y")
+
+plot(modelAB$res ~ react.data$TC, xlab ="AB", ylab ="Residual")
+plot(react.data$y ~ react.data$TC, xlab ="AB", ylab ="y")
+
+plot(modelAB$res ~ react.data$Trtmt, xaxt="n", xlab="AB", ylab="Residual")
+axis(1, at = react.data$Trtmt, labels = react.data$fTC)
+plot(react.data$y ~ react.data$Trtmt, xaxt="n", xlab="AB", ylab="y")
+axis(1, at = react.data$Trtmt, labels = react.data$fTC)
+
+by(modelAB$res, react.data$A, var)

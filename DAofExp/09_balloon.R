@@ -45,3 +45,39 @@ library(dplyr)
 balloon.data %>% ggplot(aes(x=fC, y=Time, color=fC))+
   geom_point()
 # need to explore more on this...
+
+balloon.data %>% ggplot(aes(x=Order, y=Time, color=fC))+
+  geom_point()
+
+# another way to plot this
+
+data.fc1 <- subset(balloon.data, fC==1)
+plot(x=data.fc1$Order, y=data.fc1$Time, col='red')
+abline(lm(data.fc1$Time ~ data.fc1$Order), col='red')
+
+data.fc2 <- subset(balloon.data, fC==2)
+points(x=data.fc2$Order, y=data.fc2$Time, col='blue')
+abline(lm(data.fc2$Time ~ data.fc2$Order), col='blue')
+
+data.fc3 <- subset(balloon.data, fC==3)
+points(x=data.fc3$Order, y=data.fc3$Time, col='green')
+abline(lm(data.fc3$Time ~ data.fc3$Order), col='green')
+
+data.fc4 <- subset(balloon.data, fC==4)
+points(x=data.fc4$Order, y=data.fc4$Time, col='black')
+abline(lm(data.fc4$Time ~ data.fc4$Order), col='black')
+
+# plot x vs Time instead of Order vs Time
+
+plot(x=data.fc1$x, y=data.fc1$Time, col='red')
+abline(lm(data.fc1$Time ~ data.fc1$x), col='red')
+
+points(x=data.fc2$x, y=data.fc2$Time, col='blue')
+abline(lm(data.fc2$Time ~ data.fc2$x), col='blue')
+
+points(x=data.fc3$x, y=data.fc3$Time, col='green')
+abline(lm(data.fc3$Time ~ data.fc3$x), col='green')
+
+points(x=data.fc4$x, y=data.fc4$Time, col='black')
+abline(lm(data.fc4$Time ~ data.fc4$x), col='black')
+# same effects

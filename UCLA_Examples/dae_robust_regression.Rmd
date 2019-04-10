@@ -1,0 +1,74 @@
+---
+title: "dae_robust_regression"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+# load packages
+require(foreign)
+require(MASS)
+```
+
+https://stats.idre.ucla.edu/r/dae/robust-regression/
+
+For our data analysis below, we will use the crime dataset that appears in Statistical Methods for Social Sciences, Third Edition by Alan Agresti and Barbara Finlay (Prentice Hall, 1997). The variables are state id (sid), state name (state), violent crimes per 100,000 people (crime), murders per 1,000,000 (murder), the percent of the population living in metropolitan areas (pctmetro), the percent of the population that is white (pctwhite), percent of population with a high school education or above (pcths), percent of population living under poverty line (poverty), and percent of population that are single parents (single). It has 51 observations. We are going to use poverty and single to predict crime.
+```{r}
+# EDA
+cdata <- read.dta("https://stats.idre.ucla.edu/stat/data/crime.dta")
+summary(cdata)
+```
+```{r}
+# Using robust regression analysis
+summary(ols <- lm(crime ~ poverty + single, data = cdata))
+```
+```{r}
+opar <- par(mfrow = c(2,2), oma = c(0, 0, 1.1, 0))
+plot(ols, las = 1)
+```
+From these plots, we can identify observations 9, 25, and 51 as possibly problematic to our model. We can look at these observations to see which states they represent.
+```{r}
+par(opar)
+```
+```{r}
+cdata[c(9, 25, 51), 1:2]
+```
+DC, Florida and Mississippi have either high leverage or large residuals. We can display the observations that have relatively large values of Cook's D. A conventional cut-off point is 4/n, where nnis the number of observations in the data set. We will use this criterion to select the values to display.
+```{r}
+d1 <- cooks.distance(ols)
+r <- stdres(ols)
+a <- cbind(cdata, d1, r)
+a[d1 > 4/51, ]
+```
+We probably should drop DC to begin with since it is not even a state. We include it in the analysis just to show that it has large Cook's D and demonstrate how it will be handled by rlm. Now we will look at the residuals. We will generate a new variable called absr1, which is the absolute value of the residuals (because the sign of the residual doesn't matter). We then print the ten observations with the highest absolute residual values.
+```{r}
+rabs <- abs(r)
+a <- cbind(cdata, d1, r, rabs)
+asorted <- a[order(-rabs), ]
+asorted[1:10, ]
+```
+Now let's run our first robust regression. Robust regression is done by iterated re-weighted least squares (IRLS). The command for running robust regression is rlm in the MASS package. There are several weighting functions that can be used for IRLS. We are going to first use the Huber weights in this example. We will then look at the final weights created by the IRLS process. This can be very useful.
+```{r}
+summary(rr.huber <- rlm(crime ~ poverty + single, data = cdata))
+```
+```{r}
+hweights <- data.frame(state = cdata$state, resid = rr.huber$resid, weight = rr.huber$w)
+hweights2 <- hweights[order(rr.huber$w), ]
+hweights2[1:15, ]
+```
+Next, let's run the same model, but using the bisquare weighting function. Again, we can look at the weights.
+```{r}
+rr.bisquare <- rlm(crime ~ poverty + single, data=cdata, psi = psi.bisquare)
+summary(rr.bisquare)
+```
+```{r}
+biweights <- data.frame(state = cdata$state, resid = rr.bisquare$resid, weight = rr.bisquare$w)
+biweights2 <- biweights[order(rr.bisquare$w), ]
+biweights2[1:15, ]
+```
+When comparing the results of a regular OLS regression and a robust regression, if the results are very different, you will most likely want to use the results from the robust regression. Large differences suggest that the model parameters are being highly influenced by outliers. Different functions have advantages and drawbacks. Huber weights can have difficulties with severe outliers, and bisquare weights can have difficulties converging or may yield multiple solutions.
+

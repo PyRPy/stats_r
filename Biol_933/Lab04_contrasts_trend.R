@@ -10,6 +10,12 @@ spacing_dat<-as.data.frame(spacing_dat)
 spacing_dat$Spacing<-as.factor(spacing_dat$Spacing)
 str(spacing_dat, give.attr=F)
 
+# plot data first
+library(ggplot2)
+ggplot(spacing_dat, aes(x=Spacing, y=Yield) )+
+  geom_point()
+ 
+
 #The ANOVA
 spacing_mod<-lm(Yield ~ Spacing, spacing_dat)
 anova(spacing_mod)

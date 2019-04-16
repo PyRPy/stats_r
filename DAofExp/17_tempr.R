@@ -1,7 +1,7 @@
 # tempr.r, temperature experiment, Table 17.16 p662,
 # and code from text p664
-
-tempr.data <- read.table("temperature.txt", header=T) 
+# three different type of thermostat at two different locations
+tempr.data <- read.table("Data/temperature.txt", header=T) 
 tempr.data <- within(tempr.data, {
    fTherm = factor(Therm); fSite = factor(Site); fSubj = factor(Subj) })
 head(tempr.data, 3)

@@ -35,5 +35,6 @@ by(mung.data$z, mung.data$Trtmt, qqnorm)
 qqnorm(mung.data$z[mung.data$Trtmt == 1], main = "Normal Q-Q Plot: Trtmt = 1") 
   qqline(mung.data$z)  # Line through 1st and 3rd quantile points
 
-
-
+# plot the model directly
+par(mfrow=c(2,2))
+plot(model1)

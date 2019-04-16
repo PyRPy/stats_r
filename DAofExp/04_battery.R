@@ -29,3 +29,8 @@ summary(contrast(lsmType, method="pairwise", adjust="tukey"),
 # Dunnett's method
 summary(contrast(lsmType, method="trt.vs.ctrl", adjust="mvt", ref=1),
         infer=c(T,T), level=0.95, side="two-sided")
+
+# plot for comparison
+library(ggplot2)
+ggplot(battery.data, aes(x=fType, y=LPUC))+
+  geom_point()

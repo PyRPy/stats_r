@@ -2,7 +2,7 @@
 # and code from text pp753+755
 
 # Table 19.28, p754, intra-block analysis
-oats.data <- read.table("oats.txt", header=T) 
+oats.data <- read.table("Data/oats.txt", header=T) 
 oats.data <- within(oats.data, {fBlock = factor(Block); 
              fWP = factor(WP); fA = factor(A); fB = factor(B) })
 
@@ -20,7 +20,7 @@ summary(model1)
 
 # Dunnett's Method for A: ANOVA approach
 library(lsmeans)
-lsmA1 = lsmeans(model1, ~ fA)
+lsmA1 <-  lsmeans(model1, ~ fA)
 set.seed(19831957)
 summary(contrast(lsmA1, method="trt.vs.ctrl", adjust="mvt"), 
         infer=c(T,T), level=0.99)

@@ -50,3 +50,31 @@ ggplot(mpg, aes(displ, hwy)) +
   geom_smooth(method = "rlm") # resistant to 'outliers'
 
 # 2.6.2
+# Boxplots and Jittered Points
+ggplot(mpg, aes(drv, hwy)) +
+  geom_point()
+
+ggplot(mpg, aes(drv, hwy)) + geom_jitter() # small data set
+ggplot(mpg, aes(drv, hwy)) + geom_boxplot() # 5 numbers
+ggplot(mpg, aes(drv, hwy)) + geom_violin() # difficult to explain
+
+# Histograms and Frequency Polygons
+ggplot(mpg, aes(hwy)) + geom_histogram()
+
+ggplot(mpg, aes(hwy)) + geom_freqpoly()
+
+ggplot(mpg, aes(hwy)) +
+  geom_freqpoly(binwidth = 2.5)
+
+ggplot(mpg, aes(hwy)) +
+  geom_freqpoly(binwidth = 1)
+
+# for different groups
+ggplot(mpg, aes(displ, colour = drv)) +
+  geom_freqpoly(binwidth = 0.5)
+
+ggplot(mpg, aes(displ, fill = drv)) +
+  geom_histogram(binwidth = 0.5) +
+  facet_wrap(~ drv, ncol=1)
+
+# Bar Charts

@@ -96,3 +96,43 @@ mylist[2]
 str(mylist)
 mylist[3]
 mylist[[3]]
+
+# Entering data interactively from the keyboard
+mydata <- data.frame(age=numeric(0),
+                     gender=character(0), weight=numeric(0))
+mydata <- edit(mydata)
+
+
+# Entering data inline
+mydatatxt <- "
+age gender weight
+25 m 166
+30 f 115
+18 f 120
+"
+mydata <- read.table(header=TRUE, text=mydatatxt)
+
+
+# Importing data from a delimited text file
+
+# First, save the following 4 lines in a file named 
+# "studentgrades.csv" in the current working directory
+StudentID,First,Last,Math,Science,Social Studies
+011,Bob,Smith,90,80,67
+012,Jane,Weary,75,,80
+010,Dan,"Thornton, III",65,75,70
+040,Mary,"O'Leary",90,95,92
+
+# Next, read the data into R using the read.table() function
+grades <- read.table("grades.csv", header=TRUE,
+                     row.names="StudentID", sep=",")
+grades # print data frame
+str(grades) # view data frame structure
+
+# Alternatively, import the data while specifying column classes 
+grades <- read.table("grades.csv", header=TRUE,
+                     row.names="StudentID", sep=",",
+                     colClasses=c("character", "character", "character",
+                                  "numeric", "numeric", "numeric"))
+grades # print data frame
+str(grades) # view data frame structure

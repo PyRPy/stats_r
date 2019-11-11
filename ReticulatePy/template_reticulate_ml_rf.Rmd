@@ -1,0 +1,80 @@
+---
+title: "template_reticulate_ml_rf.Rmd"
+output:
+  word_document: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Examples for using sklearn in RStudio
+### First to test Python and R environment connections
+* Load package
+```{r}
+library(reticulate)
+```
+* Setup environment for python
+```{r}
+use_condaenv("deeplearning")
+py_config()
+```
+* Try some data set for connections
+```{r}
+data(iris)
+head(iris)
+# write.csv(iris, "iris.csv")
+```
+* Read csv file from pandas
+* Unfortunately, the data 'flower' not shown in R environment through py
+```{python}
+import pandas as pd
+flower = pd.read_csv("iris.csv")
+print(flower.head())
+```
+
+* Alternatively use 'source_python'
+* flower shown in R environment somehow
+* data format different
+```{r}
+source_python('flower.py')
+head(py$flower)
+```
+
+* Try plotting some data
+```{r message=FALSE, warning=FALSE}
+library(ggplot2)
+ggplot(py$flower, aes(Sepal.Length, Sepal.Width, color=Species)) + 
+  geom_point()
+```
+
+### Connect 'sklearn' with R
+* Build a RandomForestClassifier directly
+```{r}
+x <- iris
+sklearn <- import(module = "sklearn")
+rf <- sklearn$ensemble$RandomForestClassifier()
+mod <- rf$fit(np_array(as.matrix(x[,1:4])), np_array(as.vector(x[,5])))
+mod$feature_importances_
+```
+* Predict
+```{r}
+mod$predict_proba(np_array(as.matrix(x[1:2, 1:4])))
+```
+
+* Running python script in R
+```{r}
+matx <- as.matrix(iris)
+source_python('rf_mod2.py')
+mod2 = classify(matx)
+mod2$feature_importances_
+```
+* model 2 prediction
+```{r}
+mod2$predict_proba(np_array(as.matrix(x[1:2, 1:4])))
+```
+
+* Ref : https://www.youtube.com/watch?v=EJxQSa9lwfM&app=desktop

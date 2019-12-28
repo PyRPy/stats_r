@@ -53,3 +53,17 @@ plot(pr, pch=(1:2)[cutree(cc, k=2)],
 legend("topright", col=c("black", "black", "darkgrey", "darkgrey"),
        legend = c("1/no", "2/no", "1/yes", "2/yes"),
        pch = c(1:2, 1:2), title = "Cluster/CAR", bty = "n")
+
+
+# 6.4.1 Clustering the crime rates ----------------------------------------
+head(crime)
+# write.csv(crime, "crime.csv")
+subset(crime, Murder > 15)
+
+sapply(crime, var) # large var, have to scale data
+rge <- sapply(crime, function(x) diff(range(x)))
+crime_s <- sweep(crime, 2, rge, FUN = "/")
+sapply(crime_s, var)
+
+# two groups
+kmeans(crime_s, centers = 2)$centers * rge

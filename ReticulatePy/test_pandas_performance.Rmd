@@ -1,0 +1,102 @@
+---
+title: "python on R"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Examples for python in R
+```{r}
+library(reticulate)
+
+```
+
+```{r}
+# conda_create("r-reticulate")
+# conda_install("r-reticulate", "numpy")
+```
+```{r}
+use_condaenv("deeplearning")
+py_config()
+```
+
+```{python}
+import matplotlib.pyplot as plt
+x = [1,2,3,4,5,6,7,8,9,10]
+y = x
+plt.scatter(x, y)
+plt.show()
+```
+
+```{python}
+import numpy as np
+my_py_array = np.array([2,4,6,8])
+for item in my_py_array:
+  print(item)
+```
+
+```{r}
+os <- import("os")
+os$listdir(".")
+```
+```{r}
+source_python('add.py')
+add(5, 10)
+```
+```{r}
+# https://rstudio.github.io/reticulate/articles/calling_python.html
+# import numpy and specify no automatic Python to R conversion
+np <- import("numpy", convert = FALSE)
+
+# do some array manipulations with NumPy
+a <- np$array(c(1:4))
+sum <- a$cumsum()
+
+# convert to R explicitly at the end
+py_to_r(sum)
+```
+```{python}
+import numpy as np
+import matplotlib.pyplot as plt
+t = np.arange(0.0, 2.0, 0.01)
+s = 1 + np.sin(2*np.pi*t)
+plt.plot(t, s)
+plt.xlabel('time(s)')
+plt.ylabel('voltage-mv')
+plt.grid(True)
+plt.show()
+
+```
+```{r}
+data(iris)
+head(iris)
+# write.csv(iris, "iris.csv")
+```
+```{python}
+import pandas as pd
+flower = pd.read_csv("iris.csv")
+# print(flower.head())
+
+```
+```{r}
+source_python('flower.py')
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(py$flower, aes(Sepal.Length, Sepal.Width)) + 
+  geom_point()
+```
+```{r}
+head(py$flower)
+```
+```{r}
+library(tidyverse)
+flower <- read.csv("iris.csv")
+head(flower)
+```
+
+

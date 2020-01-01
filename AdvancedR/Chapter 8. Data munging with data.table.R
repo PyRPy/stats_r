@@ -73,6 +73,71 @@ grep(pattern = p,
            "-3 - PARTIAL INTERVIEW",
            "-2 - NOT IN UNIVERSE",
            "- REFUSED", 
-           "TRICK CASE 4 - REFUSED"),
-           "4 - PARTICAL INTERVIEW OF DOCTOR",
+           "TRICK CASE 4 - REFUSED",
+           "4 - PARTICAL INTERVIEW OF DOCTOR"),
      value = TRUE)
+
+v <- c("EDUCATIO", "PLANGUAG", "BMICLASS", "S1Q01", "S2Q01")
+d[, (v):= lapply(.SD, function(x){
+  x[grep(pattern = p, x)] <- NA
+  if (is.factor(x)) droplevels(x) else x }), .SDcols = v]
+
+table(d[, EDUCATIO])
+table(d[, S1Q01])
+
+# gsub for replacement
+gsub(pattern = "abc", replacement = "", x = c("a", "abcd", "123abc456"))
+
+p.remove <- "^[-]*[0-9]+ - "
+gsub(pattern = p.remove, replacement ="",
+     x = c("1 - REFUSED TREATMENT", "2 - DID NOT REFUSED TREATMENT",
+           "3 - JACK - REFUSED", "4 - REFUSED", "97 - REFUSED", "-97 - REFUSED",
+           "-2 - MISSING", 
+           "96 - DON'T KNOW",
+           "-4 - LEGITIMATE SKIP",
+           "-3 - PARTIAL INTERVIEW",
+           "-2 - NOT IN UNIVERSE",
+           "- REFUSED", 
+           "TRICK CASE 4 - REFUSED",
+           "4 - PARTICAL INTERVIEW OF DOCTOR")
+     )
+
+d <- read.dta("04691-0001-Data.dta")
+d <- as.data.table(d)
+setkey(d, IDNUMR)
+
+d[, (v):=lapply(.SD, function(x){
+  f <- is.factor(x)
+  x[grepl(pattern = p, x)] <- NA
+  x <- gsub(pattern = p.remove, replacement = "", x)
+  if(f) factor(x) else x}), .SDcols = v]
+
+table(d[, EDUCATIO])
+
+table(d[, S1Q01])
+
+table(d[, S2Q01])
+
+# recoding numberic values
+table(d[!S2Q02R %between% c(0, 90), S2Q02R])
+table(d[!S2Q03R %between% c(0, 900), S2Q03R])
+
+hist(d[,.(S2Q03R)][[1]]) # get the data
+hist(d[, .(S2Q02R)][[1]])
+d[, .(S2Q02R)][[1]]
+
+v2 <- c("S2Q02R", "S2Q03R", "AGEYR_CH")
+m <- sort(c(9, 99, 999))
+for (k in v2){
+  j <- i <- 1
+  while(j == 1 & i <= length(m)){
+    if(max(d[[k]], na.rm = TRUE) < m[i]){
+      j <- 0
+      d[!(get(k) %between% c(0, ifelse(m[i] > 90,
+      m[i] - 9, m[i] - 1e-9))), (k):= NA_integer_]
+    } else {i <- i + 1}
+  }
+}
+
+hist(d[,.(S2Q03R)][[1]]) # get the data
+hist(d[, .(S2Q02R)][[1]], bin=60)

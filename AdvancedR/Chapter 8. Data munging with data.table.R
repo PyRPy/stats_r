@@ -141,3 +141,40 @@ for (k in v2){
 
 hist(d[,.(S2Q03R)][[1]]) # get the data
 hist(d[, .(S2Q02R)][[1]], bin=60)
+
+
+# creating new variables --------------------------------------------------
+
+v.health <- paste0("S2Q", c(19, 20, 21, 22, 23, 24, 26, 35, 37))
+v.health
+table(unlist(d[, v.health, with=FALSE]))
+
+p <- "^[-]*[0-9]+ - REFUSED$|MISSING$|DON'T KNOW$|LEGITIMATE SKIPS$|PARTIAL INTERVIEW$|NOT IN UVIVERSE$"
+
+d[, (v.health):=lapply(.SD, function(x){
+  x[grepl(pattern = p, x)] <- NA
+  if(is.factor(x)) droplevels(x) else x
+}), .SDcols = v.health]
+
+table(unlist(d[, v.health, with=FALSE]), useNA = "ifany")
+
+# reduce function
+Reduce('+', c(1, 2, 3))
+Reduce('+', list(1:3, 4:6, 7:9)) # like column addition
+Reduce('/', list(1:3, 4:6, 7:9))
+Reduce('^', list(1:3, 4:6, 3:1))
+
+fplus <- function(e1, e2){
+  if(is.factor(e1)){
+    e1 <- as.numeric(e1) -1
+  }
+  if (is.factor(e2)){
+    e2 <- as.numeric(e2) - 1
+  }
+  e1 + e2
+}
+
+d[, NHealthConditions2:=Reduce(fplus, .SD), .SDcols = v.health]
+table(d$NHealthConditions2)
+
+# fuzzy matching

@@ -178,3 +178,22 @@ d[, NHealthConditions2:=Reduce(fplus, .SD), .SDcols = v.health]
 table(d$NHealthConditions2)
 
 # fuzzy matching
+reference.Names <- c("This Test", "Test Thas", "Jane Mary", "Jack Dun-Dee")
+observed.Names <- c("this test", "test this", "test that", "JaNe Mary",
+                    "Mary Sou", "Jack Dee", "Jane Jack")
+stringdistmatrix(reference.Names, observed.Names)
+amatch(observed.Names, reference.Names, method = "dl", maxDist=4)
+
+stringdistmatrix(tolower(reference.Names), tolower(observed.Names),
+                 method = "dl")
+
+strsplit(x = reference.Names[1], split = "\\s")[[1]]
+strsplit(x = observed.Names[2], split = "\\s")[[1]]
+
+stringdistmatrix(
+  strsplit(x = reference.Names[1], split = "\\s")[[1]],
+  strsplit(x = observed.Names[2], split = "\\s")[[1]],
+  method = "dl"
+)
+
+# the rest is for later reading

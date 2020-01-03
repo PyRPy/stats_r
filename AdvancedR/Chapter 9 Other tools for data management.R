@@ -121,3 +121,64 @@ diris %>%
             M2 = mean(Petal.Width)) %>% 
   group_by(MedPW) %>% 
   summarise(r = cor(M1, M2))
+
+
+# merge and reshaping data ------------------------------------------------
+
+diris <- diris %>% group_by(Species) %>% select(Species, Sepal.Width) %>% 
+  slice(1:3)
+diris
+
+diris2 <- slice(diris, c(1, 4, 7))
+diris2
+
+dalt1 <- tibble(
+  Species = c("setosa", "setosa", "versicolor", "versicolor",
+              "virginica", "virginica", "other", "other"),
+  Type = c("wide", "wide", "wide", "wide",
+           "narrow", "narrow", "moderate", "moderate"),
+  MedPW = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE, TRUE, FALSE)
+)
+
+dalt1
+
+dalt2 <- slice(dalt1, c(1, 3))
+dalt2
+
+merge(diris2, dalt2)
+merge(diris2, dalt2, all.x = TRUE)
+
+left_join(diris2, dalt2)
+right_join(diris2, dalt2)
+
+anti_join(diris2, dalt2)
+
+diris <- as.tibble(iris)
+diris <- mutate(diris, ID = 1:n())
+diris
+
+# long table
+diris.long <- as_tibble(reshape(as.data.frame(diris),
+                                varying = list(
+                                  c("Sepal.Length", "Sepal.Width"),
+                                  c("Petal.Length", "Petal.Width")),
+                                  timevar = "Type",
+                                  v.names = c("Sepal", "Petal"),
+                                  direction = "long"))
+
+diris.long                        
+slice(diris.long, c(1, 151))
+
+diris.long <- mutate(diris.long, Type = factor(Type, levels = 1:2,
+                                      labels = c("Length", "Width")))
+
+diris.long
+slice(diris.long, c(1, 151))
+
+diris.wide2 <- as_tibble(reshape(as.data.frame(diris.long),
+                        v.names = c("Sepal", "Petal"),
+                        timevar = "Type",
+                        idvar = "ID",
+                        ids = diris.long$ID,
+                        direction = "wide"))
+diris.wide2

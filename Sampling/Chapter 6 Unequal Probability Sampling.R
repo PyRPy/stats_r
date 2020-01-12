@@ -128,3 +128,15 @@ mean((ht - tau)^2)
 
 hist(ht, freq = F, ylim= c(0, 0.005))
 hist(hh, add=T, freq = F, col = "blue")
+
+
+# Writing an R Function to Simulate a Sampling Strategy -------------------
+y <- trees$Volume
+source("srs.R") # in the current working directory
+srs(y, n = 10, b = 1000)
+
+
+# Comparing Sampling Strategies -------------------------------------------
+
+source("strategies.R")
+strategies()

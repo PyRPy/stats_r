@@ -2,7 +2,7 @@
 
 # Example 1 animal population survey --------------------------------------
 
-# table 6.1
+# Table 6.1
 yi <- c(60, 60, 14, 1)
 Area <- 100
 n = 4

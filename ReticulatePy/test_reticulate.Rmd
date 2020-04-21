@@ -10,15 +10,15 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Examples for python in R
 ```{r}
 library(reticulate)
-
 ```
 
 ```{r}
 # conda_create("r-reticulate")
 # conda_install("r-reticulate", "numpy")
+# conda_install("r-reticulate", "matplotlib")
 ```
-```{r}
-use_condaenv("deeplearning")
+```{r message=FALSE, warning=FALSE}
+use_condaenv("r-reticulate")
 py_config()
 ```
 

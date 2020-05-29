@@ -324,3 +324,125 @@ text(c(18,18,18),c(mean(police[,2])-3*sqrt(var(police[,2]))+200,
                    c(expression(LCL==- 2071),
                    expression(bar(x)==1478), 
                    expression(UCL==5027)),cex=0.9)
+
+
+# Example 5.10 A Tsq chart for overtime hours -----------------------------
+
+# T2 plot for overtime hours. Figure 5.8
+
+police=read.table("Data/T5-8.dat")
+n=length(police[,1])
+
+# subtract col means
+policec<-apply(police,2,scale,scale=F,center=T) # center only
+period=c(1:n)
+tsq=diag(policec%*%solve(cov(police))%*%t(policec)) # get T2
+
+# 11th point is an outlier
+plot(period,tsq,xlab="observation number",bty="n",
+     xlim=c(0,16),ylab=expression(T^2),ylim=c(0,12),type="l",
+     main="Legal appearances and extraordinary event hours")
+abline(h=qchisq(.99,2)+.4,lty=2)
+points(period,tsq,pch=19,col="blue")
+
+
+# Example 5.11 Control of robotic welder - more then Tsq needed -----------
+# very good example, practical purpose
+# need to install package ellipse for graphs below
+# T2 plot for natural logs of welding data--need to fix
+
+weld=read.table("Data/T5-9.dat")
+names(weld)=c("voltage","current","speed","flow")
+head(weld)
+
+n=length(weld[,1])
+lweld4=log(weld[,4])
+lweld=cbind(weld[,1:3],lweld4)
+
+# subtract col means
+lweldc<-apply(lweld,2,scale,scale=F,center=T)
+case=c(1:n)
+tsq=diag(lweldc%*%solve(cov(lweld))%*%t(lweldc))
+plot(case,tsq,xlab="case",bty="n",xlim=c(0,45),
+     ylab=expression(T^2),ylim=c(0,15),type="l")
+abline(h=qchisq(.99,4),lty=4)
+points(case,tsq,pch=19,col="blue")
+text(c(43,43),c(qchisq(.95,4)+.4,qchisq(.99,4)+.4),
+     c("95% Limit","99% Limit"),cex=0.9)
+abline(h=qchisq(.95,4),lty=2)
+
+# Figure 5.10 ellipse chart for ln(flow) and ln(voltage)
+
+library(ellipse)
+
+weld=read.table("Data/T5-9.dat")
+weld[,5]=log(weld[,4])
+wel=cbind(weld[,1],weld[,5])
+S=matrix(c(var(weld[,1]),cov(weld[,1],weld[,5]),
+           cov(weld[,1],weld[,5]),var(weld[,5])),2,2)
+
+eli = ellipse(S, centre=c(mean(weld[,1]),mean(weld[,5])),
+              t=sqrt(qchisq(.99,2)), npoint=5000)
+plot(eli, cex=.3, xlab="Voltage", ylab="ln(gas flow)",  xlim=c(20, 24),
+     ylim=c(3.85,4.05),type="l",lty=1.5)
+
+points(weld[,1],weld[,5],pch=19,col="blue")
+points(mean(weld[,1]),mean(weld[,5]),pch=3)
+
+# Figure 5.11 X-bar chart for ln (gas flow)
+case=c(1:40)
+lngf=log(weld[,4])
+cbind(case,lngf)
+plot(case,lngf,type="l",xlab="Case",col="blue",cex=1.5,lwd=1.7, 
+     ylab="ln (gas flow )" ,
+     xlim=c(0,45),ylim=c(3.89,4.01))
+points(case,lngf,pch=19,col="blue")
+abline(h=mean(lngf))
+abline(h=mean(lngf) +3*sqrt(var(lngf)),lty=2)
+abline(h=mean(lngf)-3*sqrt(var(lngf)),lty=2)
+text(c(43,43.3,43),
+     c(mean(lngf) -3*sqrt(var(lngf))+.003,mean(lngf)+.003,
+       mean(lngf) +3*sqrt(var(lngf))-.003),
+     c("LCL=3.896","Mean=3.951","UCL=4.005"),cex=0.9)
+
+
+# Example 5.12 A conrol ellipse for future overtime -----------------------
+# remove point 11
+# Figure 5.12
+library(ellipse)
+
+pol=read.table("Data/T5-8.dat")
+police=pol[-11,1:5]
+S=matrix(c(var(police[,1]),cov(police[,1],police[,2]),
+           cov(police[,1],police[,2]),var(police[,2])),2,2)
+
+# quality ellipse
+n=length(police[,1])
+p=2
+c2=2*(n^2-1)*qf(.95,2,n-2)/(n*(n-2))
+eli = ellipse(S,centre=c(mean(police[,1]),mean(police[,2])),
+              t=sqrt(c2),npoint=5000)
+plot(eli, cex=.3, xlab="legal appearances (hours)", 
+     ylab="Extraordinary event (hours)",
+     xlim=c(1500, 5500),ylim=c(-700,3000),type="l",lty=1.5)
+points(police[,1],police[,2],pch=19,col="blue")
+points(mean(police[,1]),mean(police[,2]),pch=3)
+
+
+# Example 5.13 Illustrating the EM algorithm ------------------------------
+
+# where there are missing data
+
+# The calculation is iterative but is easy when you install the package norm which
+# includes software to compute the missing values and the parameter estimates
+# It chooses possibly different starting values
+library("norm")
+
+# enter the data
+x = matrix(c(NA,7,5,NA,0,2,1,NA,3,6,2,5),4,3)
+x
+# prelim.norm changes the coding of missing values
+s=prelim.norm(x)
+mlethet=em.norm(s,criterion=0.0001)
+mlethet=getparam.norm(s,mlethet,corr=F) #get the estimates on original scale
+mlethet # page 255

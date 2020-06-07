@@ -209,3 +209,177 @@ c(Tsq,c2)
 # most critical linear combination
 xcoef=solve(mSn1n2)%*%(xbar1-xbar2) 
 xcoef
+
+
+# Example 6.6 The approx. Tsq distribution when sigma1 != sigma2 ----------
+# still electricity problem
+n1=45
+n2=55
+p=2
+xbar1=c(204.4,556.6)
+S1=matrix(c(13825.3,23823.4,23823.4,73107.4),2,2)
+xbar2=c(130.0,355.0)
+S2=matrix(c(8632.0,19616.7,19616.7,55964.5),2,2)
+Sn1n2=S1/n1+S2/n2
+Sn1n2
+
+# the degrees of freedom calculation uses sum(diag(A) for trace(A).First
+k1=n1**(-1)*(sum(diag((S1/n1)%*%solve(S1/n1+S2/n2)%*%(S1/n1)%*%solve(S1/n1+S2/n2)))+
+                     ( sum(diag((S1/n1)%*%solve(S1/n1+S2/n2))))**2)
+k2=n2**(-1)*(sum(diag((S2/n2)%*%solve(S1/n1+S2/n2)%*%(S2/n2)%*%solve(S1/n1+S2/n2)))+
+                     ( sum(diag((S2/n2)%*%solve(S1/n1+S2/n2))))**2)
+# estimate of degrees of freedom
+nu=(p+p^2)/(k1+k2)
+nu
+
+# critical value
+c2=(nu*p/(nu-p+1))*qf(.95,p,nu-p+1)
+
+T2=t(xbar1-xbar2)%*%solve(Sn1n2)%*%(xbar1-xbar2)
+c(T2,c2)
+
+
+# 6.4 One way MANOVA ------------------------------------------------------
+
+# Example 6.7 The SS decomposition for ANOVA ------------------------------
+
+# data as single column
+x=c(9,6,9,0,2,3,1,2)
+tr=c(1,1,1,2,2,3,3,3)
+
+# change data type to factor
+ftr=factor(tr)
+fit=aov(lm(x~ftr))
+# the group means are
+tapply(x,tr,mean)
+mean(x)
+round(residuals(fit), 1)
+
+# show the matrix as in the text book
+mat <- c(residuals(fit)[1:5], NA, residuals(fit)[6:8])
+matrix(round(mat, 1), 3,3, byrow = T)
+plot(x, residuals(fit))
+abline(h = 0)
+
+
+# Example 6.8 ANOVA table anf F-test for trt effects ----------------------
+
+# As in Example 6.7
+x=c(9,6,9,0,2,3,1,2)
+tr=c(1,1,1,2,2,3,3,3)
+# change data type to factor
+ftr=factor(tr)
+fit=aov(lm(x~ftr))
+fit # how to get it by 'hands-on' calculations 
+
+# From the table we calculate the observed F
+F=(78/2)/(10/5)
+
+g=3 # number of treatment
+n=length(x) 
+ctble=qf(.99,g-1,n-g)
+c(F,ctble)
+(F > ctble) # true; reject Ho: tau1 = tau2 = tau3 = 0 (not treatment effects) 
+
+
+# Example 6.9 MANOVA table and Wilks' lambda - 3 means --------------------
+# We first do the decompositions of the two variables separately
+# For the first variable
+x11=c(9,6,9)
+x12=c(0,2)
+x13=c(3,1,2)
+x1=c(x11,x12,x13)
+n1=length(x11)
+n2=length(x12)
+n3=length(x13)
+xbar11=mean(x11)*c(rep(1,n1))
+xbar12=mean(x12)*c(rep(1,n2))
+xbar13=mean(x13)*c(rep(1,n3))
+x1bar=mean(x1)
+x1bar1_3=c(xbar11,xbar12,xbar13)
+x1-x1bar1_3
+SSobs1=t(x1)%*%x1
+SSmean1=(n1+n2+n3)*x1bar**2
+SStr1=t(x1bar1_3-x1bar)%*%(x1bar1_3-x1bar)
+SSres1=t(x1-x1bar1_3)%*%(x1-x1bar1_3)
+Totalcor1=SStr1+SSres1
+
+# For the second variable
+# data as single column
+x=c(9,6,9,0,2,3,1,2)
+tr=c(1,1,1,2,2,3,3,3)
+# change data type to factor
+ftr=factor(tr)
+fit=aov(lm(x~ftr))
+
+
+x21=c(3,2,7)
+x22=c(4,0)
+x23=c(8,9,7)
+x2=c(x21,x22,x23)
+xbar21=mean(x21)*c(rep(1,n1))
+xbar22=mean(x22)*c(rep(1,n2))
+xbar23=mean(x23)*c(rep(1,n3))
+x2bar=mean(x2)
+x2bar1_3=c(xbar21,xbar22,xbar23)
+x2-x2bar1_3
+SSobs2=t(x2)%*%x2
+SSmean2=(n1+n2+n3)*x2bar**2
+SStr2=t(x2bar1_3-x2bar)%*%(x2bar1_3-x2bar)
+SSres2=t(x2-x2bar1_3)%*%(x2-x2bar1_3)
+Totalcor2=SStr2+SSres2
+
+# Calculate the cross product terms
+SCPobs12=t(x2)%*%x1
+SCPmean12=(n1+n2+n3)*x2bar*x1bar
+SCPtr12=t(x2bar1_3-x2bar)%*%(x1bar1_3-x1bar)
+SCPres12=t(x2-x2bar1_3)%*%(x1-x1bar1_3)
+
+# Form matrices
+W=matrix(c(SSres1,SCPres12,SCPres12,SSres2),2,2)
+B=matrix(c(SStr1,SCPtr12,SCPtr12,SStr2),2,2)
+Lamb=det(W)/det(B+W)
+Lamb
+g=3
+
+# transformed test statistic
+TLam=((1-sqrt(Lamb))/sqrt(Lamb))*(n1+n2+n3-g-1)/(g-1)
+crit=qf(.99,2*(g-1),2*(n1+n2+n3-g-1))
+c(TLam,crit)
+
+
+# Example 6.10 A multivariate analysis of Wisc. nursing home data ---------
+# the study is to investigate the effects of ownership or certification on costs
+# X1 nursing labor cost, X2 dietary labor X3 plant O&M  X4 house keep and laundry
+# group 1 private, 2 nonprofit, 3 government
+# enter sample sizes, means and covariance matrices
+n1=271
+n2=138
+n3=107
+p=4
+xbar1=c(2.066,.480,.082,.360)
+xbar2=c(2.167,.596,.124,.418)
+xbar3=c(2.273,.521,.125,.383)
+S1=matrix(c(.291,-.001,.002,.010,-.001,.011,.000,.003,.002,.000,.001,.000,.010,.003,.000,.010),4,4)
+S2=matrix(c(.561,.011,.001,.037,.011,.025,.004,.007,.001,.004,.005,.002,.037,.007,.002,.019),4,4)
+S3=matrix(c(.261,.030,.003,.018,.030,.017,-.000,.006,.003,-.000,.004,.001,.018,.006,.001,.013),4,4)
+
+# calculate statistics
+W=(n1-1)*S1+(n2-1)*S2+(n3-1)*S3 # W different from text so different values for test statistic
+W
+xbar=(n1*xbar1+n2*xbar2+n3*xbar3)/(n1+n2+n3)
+B=n1*(xbar1-xbar)%*%t(xbar1-xbar)+ n2*(xbar2-xbar)%*%t(xbar2-xbar)+n3*(xbar3-xbar)%*%t(xbar3-xbar)
+Lamb=det(W)/det(B+W)
+Lamb
+
+# trasformed statistic to F
+g=3
+n=n1+n2+n3
+T=((n-p-2)/p)*(1-sqrt(Lamb))/sqrt(Lamb)
+crit=qchisq(.99,2*p)/(2*p)
+c(T,crit)
+
+# the approximation for log Lamb
+Tlog=-(n-1-(p+g)/2)*log(Lamb)
+critlog=qchisq(.99,p*(g-1))
+c(Tlog,critlog) 

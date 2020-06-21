@@ -383,3 +383,102 @@ c(T,crit)
 Tlog=-(n-1-(p+g)/2)*log(Lamb)
 critlog=qchisq(.99,p*(g-1))
 c(Tlog,critlog) 
+
+# page-309
+# 6.11 Simultaneous interval for treatment differences - nursing h --------
+# enter sample sizes, means and covariance matrices
+n1=271
+n2=138
+n3=107
+n = n1 + n2 + n3
+p=4
+g=3
+xbar1=c(2.066,.480,.082,.360)
+xbar2=c(2.167,.596,.124,.418)
+xbar3=c(2.273,.521,.125,.383)
+S1=matrix(c(.291,-.001,.002,.010,-.001,.011,.000,.003,.002,.000,.001,.000,.010,.003,.000,.010),4,4)
+S2=matrix(c(.561,.011,.001,.037,.011,.025,.004,.007,.001,.004,.005,.002,.037,.007,.002,.019),4,4)
+S3=matrix(c(.261,.030,.003,.018,.030,.017,-.000,.006,.003,-.000,.004,.001,.018,.006,.001,.013),4,4)
+
+# calculate statistics
+W=(n1-1)*S1+(n2-1)*S2+(n3-1)*S3 
+# W different from text so confidence intervals different
+
+xbar=(n1*xbar1+n2*xbar2+n3*xbar3)/(n1+n2+n3)
+xbar
+hatau1=xbar1-xbar
+hatau2=xbar2-xbar
+hatau3=xbar3-xbar
+1-.05/(4*3*2) # 1 - a/2m
+
+dif133=hatau1[3]-hatau3[3]
+x133L=dif133-qt(.99792,n-g)*sqrt((1/n1+1/n3)*W[3,3]/(n-g))
+x133U=dif133+qt(.99792,n-g)*sqrt((1/n1+1/n3)*W[3,3]/(n-g))
+c(x133L,x133U)
+
+x123L=hatau1[3]-hatau2[3]-qt(.99792,n-g)*sqrt((1/n1+1/n2)*W[3,3]/(n-g))
+x123U=hatau1[3]+hatau2[3]+qt(.99792,n-g)*sqrt((1/n1+1/n2)*W[3,3]/(n-g))
+c(x123L,x123U)  # no difference in means
+
+x233L=hatau2[3]-hatau3[3]-qt(.99792,n-g)*sqrt((1/n2+1/n3)*W[3,3]/(n-g))
+x233U=hatau2[3]-hatau3[3]+qt(.99792,n-g)*sqrt((1/n2+1/n3)*W[3,3]/(n-g))
+c(x233L,x233U)
+
+
+# Example 6.12 Testing equality of covariance matrices --------------------
+
+# enter sample sizes, means and covariance matrices
+n1=271
+n2=138
+n3=107
+n=n1+n2+n3
+p=4
+g=3
+xbar1=c(2.066,.480,.082,.360)
+xbar2=c(2.167,.596,.124,.418)
+xbar3=c(2.273,.521,.125,.383)
+S1=matrix(c(.291,-.001,.002,.010,-.001,.011,.000,.003,.002,.000,.001,.000,.010,.003,.000,.010),4,4)
+S2=matrix(c(.561,.011,.001,.037,.011,.025,.004,.007,.001,.004,.005,.002,.037,.007,.002,.019),4,4)
+S3=matrix(c(.261,.030,.003,.018,.030,.017,-.000,.006,.003,-.000,.004,.001,.018,.006,.001,.013),4,4)
+# calculate statistic for testing equality of covariance matrices
+W=(n1-1)*S1+(n2-1)*S2+(n3-1)*S3
+Sp=W/(n-g)
+u=(1/(n1-1)+1/(n2-1)+1/(n3-1)-1/(n-g))*(2*p^2+3*p-1)/(6*(p+1)*(g-1))
+M=(n-g)*log(det(Sp))-(n1-1)*log(det(S1))-(n2-1)*log(det(S2))-(n3-1)*log(det(S3))
+CT=(1-u)*M
+# df chi square
+nu=p*(p+1)*(g-1)/2
+crit=qchisq(.99,nu)
+c(CT,crit)  # the P-value will be extremely small
+# reject Ho. conclude that covariance matrices are not equivalent
+
+
+# Ex 6.13 Two-way multivariate analysis of plastic film data --------------
+
+Dat=read.table("Data/T6-4.dat")
+names(Dat)=c("rate","additive","tear","gloss","opacity")
+str(Dat)
+head(Dat)
+
+fit=manova(cbind(tear,gloss,opacity)~rate*additive,data=Dat)
+summary(fit,test="Wilks")
+
+# the anova's for each  response variable are
+fit1=aov(tear~rate*additive,data=Dat)
+summary(fit1)
+
+fit2=aov(gloss~rate*additive,data=Dat)
+summary(fit2)
+
+fit3=aov(opacity~rate*additive,data=Dat)
+summary(fit3)
+
+# The two factors do not interact. The individual summary for tear
+with(Dat,tapply(tear,list(rate),mean))
+with(Dat,tapply(tear,list(rate),var))
+with(Dat,tapply(tear,list(additive),mean))
+with(Dat,tapply(tear,list(additive),var))
+
+# for gloss
+with(Dat,tapply(gloss,list(rate),mean))
+with(Dat,tapply(gloss,list(rate),var))

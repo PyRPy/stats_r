@@ -6,6 +6,7 @@
 wine <- read.table("http://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data",
                    sep=",")
 head(wine)
+table(wine$V1)
 # write.csv(wine, "wine.csv")
 
 # Plotting Multivariate Data
@@ -126,7 +127,7 @@ calcBetweenGroupsVariance <- function(variable,groupvariable)
   levels <- levels(groupvariable2)
   numlevels <- length(levels)
   # calculate the overall grand mean:
-  grandmean <- mean(variable)
+  grandmean <- mean(as.numeric(unlist(variable))) # fixed problem ? so complicated
   # get the mean and standard deviation for each group:
   numtotal <- 0
   denomtotal <- 0
@@ -344,4 +345,164 @@ text(wine.pca$x[,1],wine.pca$x[,2], wine$V1, cex=0.7, pos=4, col="red")
 
 # Therefore, the first two principal components are reasonably useful 
 # for distinguishing wine samples of the three different cultivars.
+
+
+# Linear Discriminant Analysis --------------------------------------------
+
+library(MASS)
+wine.lda <- lda(wine$V1 ~ wine$V2 + wine$V3 + wine$V4 + wine$V5 + wine$V6 + 
+                  wine$V7 + wine$V8 + wine$V9 + wine$V10 + wine$V11 + 
+                  wine$V12 + wine$V13 + wine$V14)
+
+# Loadings for the Discriminant Functions
+wine.lda
+wine.lda$scaling[,1]
+calclda <- function(variables,loadings)
+{
+  # find the number of samples in the data set
+  as.data.frame(variables)
+  numsamples <- nrow(variables)
+  # make a vector to store the discriminant function
+  ld <- numeric(numsamples)
+  # find the number of variables
+  numvariables <- length(variables)
+  # calculate the value of the discriminant function for each sample
+  for (i in 1:numsamples)
+  {
+    valuei <- 0
+    for (j in 1:numvariables)
+    {
+      valueij <- variables[i,j]
+      loadingj <- loadings[j]
+      valuei <- valuei + (valueij * loadingj)
+    }
+    ld[i] <- valuei
+  }
+  # standardise the discriminant function so that its mean value is 0:
+  ld <- as.data.frame(scale(ld, center=TRUE, scale=FALSE))
+  ld <- ld[[1]]
+  return(ld)
+}
+
+calclda(wine[2:14], wine.lda$scaling[,1])
+# the values of the first linear discriminant function can be calculated 
+# using the “predict()” function in R
+
+wine.lda.values <- predict(wine.lda, wine[2:14])
+wine.lda.values$x[,1]
+
+groupStandardise <- function(variables, groupvariable)
+{
+  # find out how many variables we have
+  variables <- as.data.frame(variables)
+  numvariables <- length(variables)
+  # find the variable names
+  variablenames <- colnames(variables)
+  # calculate the group-standardised version of each variable
+  for (i in 1:numvariables)
+  {
+    variablei <- variables[i]
+    variablei_name <- variablenames[i]
+    variablei_Vw <- calcWithinGroupsVariance(variablei, groupvariable)
+    variablei_mean <- mean(as.numeric(unlist(variablei))) # fixed inconsistency ?
+    variablei_new <- (variablei - variablei_mean)/(sqrt(variablei_Vw))
+    data_length <- nrow(variablei)
+    if (i == 1) { variables_new <- data.frame(row.names=seq(1,data_length)) }
+    variables_new[`variablei_name`] <- variablei_new
+  }
+  return(variables_new)
+}
+
+groupstandardisedconcentrations <- groupStandardise(wine[2:14], wine[1])
+
+wine.lda2 <- lda(wine$V1 ~ groupstandardisedconcentrations$V2 + groupstandardisedconcentrations$V3 +
+                   groupstandardisedconcentrations$V4 + groupstandardisedconcentrations$V5 +
+                   groupstandardisedconcentrations$V6 + groupstandardisedconcentrations$V7 +
+                   groupstandardisedconcentrations$V8 + groupstandardisedconcentrations$V9 +
+                   groupstandardisedconcentrations$V10 + groupstandardisedconcentrations$V11 +
+                   groupstandardisedconcentrations$V12 + groupstandardisedconcentrations$V13 +
+                   groupstandardisedconcentrations$V14)
+
+# The loadings for V8, V13 and V14 are negative, while those for V11 and V5 
+# are positive. Therefore, the discriminant function seems to represent a c
+# ontrast between the concentrations of V8, V13 and V14, and the concentrations 
+# of V11 and V5.
+
+# the values of the discriminant function are the same regardless of whether we standardise the input 
+# variables or not. 
+wine.lda.values <- predict(wine.lda, wine[2:14])
+wine.lda.values$x[,1]
+
+wine.lda.values2 <- predict(wine.lda2, groupstandardisedconcentrations)
+wine.lda.values2$x[,1]
+
+# Separation Achieved by the Discriminant Functions
+wine.lda.values <- predict(wine.lda, standardisedconcentrations)
+calcSeparations(wine.lda.values$x,wine[1])
+
+# The “proportion of trace” that is printed when you type “wine.lda” 
+# (the variable returned by the lda() function) is the percentage separation 
+# achieved by each discriminant function.
+wine.lda
+
+(wine.lda$svd)^2
+
+# A Stacked Histogram of the LDA Values
+# seperate 1 and 3
+ldahist(data = wine.lda.values$x[, 1], g = wine$V1)
+# seperate 2 from 1 and 3
+ldahist(data = wine.lda.values$x[,2], g=wine$V1)
+
+# Scatterplots of the Discriminant Functions
+plot(wine.lda.values$x[,1],wine.lda.values$x[,2]) 
+text(wine.lda.values$x[,1],wine.lda.values$x[,2],wine$V1,cex=0.7,pos=4,col="red")
+
+# Allocation Rules and Misclassification Rate
+printMeanAndSdByGroup(wine.lda.values$x,wine[1])
+
+calcAllocationRuleAccuracy <- function(ldavalue, groupvariable, cutoffpoints)
+{
+  # find out how many values the group variable can take
+  groupvariable2 <- as.factor(groupvariable[[1]])
+  levels <- levels(groupvariable2)
+  numlevels <- length(levels)
+  # calculate the number of true positives and false negatives for each group
+  numlevels <- length(levels)
+  for (i in 1:numlevels)
+  {
+    leveli <- levels[i]
+    levelidata <- ldavalue[groupvariable==leveli]
+    # see how many of the samples from this group are classified in each group
+    for (j in 1:numlevels)
+    {
+      levelj <- levels[j]
+      if (j == 1)
+      {
+        cutoff1 <- cutoffpoints[1]
+        cutoff2 <- "NA"
+        results <- summary(levelidata <= cutoff1)
+      }
+      else if (j == numlevels)
+      {
+        cutoff1 <- cutoffpoints[(numlevels-1)]
+        cutoff2 <- "NA"
+        results <- summary(levelidata > cutoff1)
+      }
+      else
+      {
+        cutoff1 <- cutoffpoints[(j-1)]
+        cutoff2 <- cutoffpoints[(j)]
+        results <- summary(levelidata > cutoff1 & levelidata <= cutoff2)
+      }
+      trues <- results["TRUE"]
+      trues <- trues[[1]]
+      print(paste("Number of samples of group",leveli,"classified as group",levelj," : ",
+                  trues,"(cutoffs:",cutoff1,",",cutoff2,")"))
+    }
+  }
+}
+
+calcAllocationRuleAccuracy(wine.lda.values$x[,1], wine[1], c(-1.751107, 2.122505))
+# There are 3+5+1=9 wine samples that are misclassified, 
+# out of (56+3+5+65+1+48=) 178 wine samples
 

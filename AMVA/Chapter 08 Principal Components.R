@@ -54,3 +54,122 @@ RcorY2Z2=eigR8.2$vector[2,2]*sqrt( eigR8.2$value[2])
 
 # proportion explained
 eigR8.2$values[1]/ncol(RCOR)
+
+
+# Example 8.3 Sample variability iwth two sample PCs ----------------------
+
+cen=read.table("Data/T8-5.dat")
+pc= eigen(cov(cen))
+pc
+# Note the first three eigenvectors are the negatives of those in the text 
+# so we calculate the correlations of first two  principal components with 
+# variables by inserting a minus sign
+cor(-as.matrix(cen)%*%pc$vectors[,1:2],cen)
+
+# scree plot 
+plot(seq(1:5),pc$values,type="l",col="blue",bty="n",
+     xlab="number",
+     ylab=expression(hat(lambda))) 
+
+# you could also use the command princomp but the eigenvalues are a 
+# little different. 
+pc.cen=princomp(cen)
+pc.cen$loadings
+plot(pc.cen,type="lines",col="blue")
+
+# Example 8.4 Summarize sample var with one sample PC ---------------------
+
+turtle=read.table("Data/T6-9.dat")
+head(turtle)
+names(turtle) <- c("len", "wid", "ht")
+# take logs and put in file turt
+turt=transform(turtle, lnlen=log(len),lnwid=log(wid),lnht=log(ht))
+
+names(turt)=c("len","wid","ht","gender","lnlen","lnwid","lnht")
+head(turt)
+
+pc.lnturt=princomp(turt[25:48,5:7])
+loadings(pc.lnturt)
+
+# the first principal component is the negative of that in text
+# To find the correlations of first principal component with the first variable
+cor(-pc.lnturt$score[,1],turt[25:48,5:7]) 
+
+# the scree plot
+plot(pc.lnturt,type="lines",col="blue")
+
+
+# Example 8.5 Sample PC from standardized data ----------------------------
+library(quantmod)
+library(PerformanceAnalytics)
+# Stock watch list --------------------------------------------------------
+
+# a collection of stocks
+mystocks <- c("MSFT", "ZM", "PYPL", "DHR", "TMO")
+
+# get data
+getSymbols(mystocks, from = "2020-01-01", src = "yahoo")
+
+wkret1 <- weeklyReturn(MSFT)
+wkret2 <- weeklyReturn(ZM)
+wkret3 <- weeklyReturn(PYPL)
+wkret4 <- weeklyReturn(DHR)
+wkret5 <- weeklyReturn(TMO)
+
+df_ret <- data.frame(msft = wkret1, zm = wkret2, pypl=wkret3,
+                     dhr = wkret4, tmo = wkret5)
+head(df_ret)
+names(df_ret) = c("msft", "zm", "pypl", "dhr", "tmo")
+# get weekly return average
+weeklyret <- c(mean(weeklyReturn(MSFT)),
+             mean(weeklyReturn(ZM)),
+             mean(weeklyReturn(PYPL)),
+             mean(weeklyReturn(DHR)),
+             mean(weeklyReturn(TMO)))
+weeklyret
+
+# corr matrix
+round(cor(df_ret), 2)
+
+# eigen values / vectors
+pc_ret <- eigen(cor(df_ret))
+pc_ret$values
+pc_ret$vectors
+sum(pc_ret$values) # equal to 5 
+# first two PC account for :
+sum(pc_ret$values[1:2]) / sum(pc_ret$values) # 83.09%
+
+# use princomp
+pc.ret=princomp(cor(df_ret))
+pc.ret$loadings
+plot(pc.ret,type="lines",col="blue")
+
+
+# Example 8.6 Components fr a corr matrix with special struct -------------
+
+R=matrix(c(1,.7501,.6329,.6363,.7501,1,.6925,.7386,
+           .6329,.6925,1,.6625,.6363,.7386,.6625,1), 4,4)
+eigen(R)
+# The first principal component( eigen vector) is the negative of the one 
+# in the text
+
+
+# Example 8.7 Plot the principal components for turtle data ---------------
+
+turtle=read.table("Data/T6-9.dat")
+
+# take logs and put in columns 5 to 7 of file turt
+turt=transform(turtle, lnlen=log(turtle[,1]),lnwid=log(turtle[,2]),lnht=log(turtle[,3]))
+names(turt)=c("len","wid","ht","gender","lnlen","lnwid","lnht")
+
+# we use princomp  to obtain the scores
+pc.lnturt=princomp(turt[25:48,5:7])
+
+# normal scores for the normal scores plot
+xns=qnorm(1:24/25)
+plot(xns,sort(pc.lnturt$scores[,2]),pch=19,xlab="normal scores",ylab="pc2")
+
+# pc.lnturt$loadings shows that the first principal component is the negative 
+# of the one in the text we introduce a minus sign for the second plot
+plot(pc.lnturt$scores[,2],-pc.lnturt$scores[,1],
+     xlab="pc2",ylab="pc1",pch=19,col="blue")

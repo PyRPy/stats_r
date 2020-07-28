@@ -222,3 +222,46 @@ fsreg=as.matrix(stock,103,5)%*%fsregr$weights
 plot(fsreg[,1],fsreg[,2],pch=19,
                         xlab="Scores for Factor 1",
                         ylab="Scores for Factor 2")
+
+
+# Example 9.14 Factor analysis of chicken-bone data -----------------------
+
+library(psych)
+dat=read.table("Data/E9-14.dat")
+names(dat)=c("skullen","skullbr","femurlen","tibialen","humerlen","ulnalen")
+R=cor(dat)
+round(R, 3)
+
+fitmlr=fa(dat,3,fm="ml",rotate="varimax",residual=TRUE)
+fsrml=factor.scores(dat,fitmlr,method=c("Thurstone"))
+plot(fsrml$scores[,1],fsrml$scores[,2],
+     xlab="First factor scores--mle",
+     ylab="Second factor scores--mle")
+
+cat("\n **** method = principal **** \n")
+faprinr=principal(dat,3,rotate="varimax")
+faprinr
+
+fsprinr=factor.scores(dat,faprinr,method=c("Thurstone"))
+plot(fsrml$scores[,1],fsprinr$scores[,1],
+     xlab="First factor scores--mle",
+     ylab="First factor scores--Principal component")
+
+plot(fsrml$scores[,2],fsprinr$scores[,2],xlab="Second factor scores--mle",
+     ylab="Second factor scores--Principal component")
+
+plot(fsrml$scores[,3],fsprinr$scores[,3],xlab="Third factor scores--mle",
+     ylab="Third factor scores--Principal component")
+
+# split the data---mle  is difficult to obtain. This is the Heywood case and 
+# apparently the solution is not well determined. 
+# As we suggest in the text, 3 factors is too many  and the best approach is 
+# to use a 2 factor solution
+
+dat1=dat[1:137,]
+dat2=dat[138:276,]
+cor(dat1)
+cor(dat2)
+fitmlr1d=fa(dat1,3,fm="ml",rotate="varimax") #different from text. 
+fitmlr2d=fa(dat2,3,fm="ml",rotate="varimax") #different from text 
+# not good, not aligned with  y = 1 * x line

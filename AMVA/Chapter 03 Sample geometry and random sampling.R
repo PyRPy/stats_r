@@ -97,15 +97,12 @@ names(dwaste) = c("paper", "plastic")
 year = c(1960, 1970, 1980, 1990, 1995, 2000, 2003)
 dwaste <- cbind(year, dwaste)
 
-with(data = dwaste, 
-plot(year,paper,col="blue",pch=1),
-)
+attach(dwaste) 
 
-with(data = dwaste,
-     lines(year,plastic, col="green"))
+matplot(year, cbind(paper,plastic),type="l",col=c("red","green"),lty=c(1,1))
+detach(dwaste)
 
 # the trends are very strong 
-
 
 # Example 3.7 calculating a generalized variance --------------------------
 

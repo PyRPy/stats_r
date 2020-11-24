@@ -55,7 +55,9 @@ aovComp <- aov(NDI ~ Time*Method + Error(Subject/Time), theData)
 summary(aovComp)
 
 
-###############################################
+
+# Power simulation --------------------------------------------------------
+
 # for power estimate run the below
 # don't forget to set up theData and var-cov
 library(MASS)

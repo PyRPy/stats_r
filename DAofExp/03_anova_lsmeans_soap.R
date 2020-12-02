@@ -20,6 +20,8 @@ model1 <- aov(WtLoss ~ fSoap, data=soap.data)
 anova(model1)
 
 # install.packages("lsmeans")
+# The lsmeans command generates the least squares means for the three
+# levels of the factor fSoap
 library(lsmeans)
 lsmeans(model1, "fSoap")
 

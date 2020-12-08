@@ -14,6 +14,13 @@ library(lsmeans)
 lsmType <- lsmeans(model1, ~ fType) # Compute and save lsmeans
 levels(battery.data$fType)
 
+# Level 	Treatment 	Combination
+# ----------------------------------------
+#  1 	    alkaline, 	name brand  (11)
+#  2 	    alkaline, 	store brand (12)
+#  3 	    heavy duty, name brand  (21)
+#  4 	    heavy duty, store brand (22)
+
 summary(contrast(lsmType, list(Duty=c( 1, 1,-1,-1)/2,
                               Brand=c( 1,-1, 1,-1)/2,
                                  DB=c( 1,-1,-1, 1)/2)),

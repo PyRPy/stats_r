@@ -1,4 +1,11 @@
 # drilladvance.r, drill advance experiment, Table 7.12, p231
+# page - 220
+# Daniel (1976) described a single replicate 2×2×2×2 experiment to 
+# study the effects of four treatment factors on the rate of advance 
+# of a small stone drill. The treatment factors were “load on the drill” (A), 
+# “flow rate through the drill” (B), “speed of rotation” (C), and “type of 
+# mud used in drilling” (D). Each factor was observed at two levels, 
+# coded 1 and 2.
 
 # Input data for A, B, C, D and Advance
 drill.data <- read.table("Data/drill.advance.txt", header=T)

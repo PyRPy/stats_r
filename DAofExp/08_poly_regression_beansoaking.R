@@ -69,3 +69,7 @@ qqnorm(model3$res, ylim=c(-10,10), xlim=c(-4,4)); abline(h=0, v=0)
 bean.data$fA <- factor(bean.data$x)
 modelA <- lm(Length ~ fA, data=bean.data)
 anova(model2, modelA)
+
+# pairs comparison
+modelfA <- aov(Length ~ fA, data=bean.data)
+TukeyHSD(modelfA, "fA", ordered = TRUE)

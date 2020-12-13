@@ -5,7 +5,7 @@
 options(width=80, digits=5, scipen=2) 
 
 # Tables 10.14-17, pp332-336
-cotton.data <- read.table("cotton.spinning.txt", header=T)
+cotton.data <- read.table("Data/cotton.spinning.txt", header=T)
 head(cotton.data, 3) 
 cotton.data <- within(cotton.data, 
                      {fBlock = factor(Block); fTrtmt = factor(Trtmt);
@@ -51,5 +51,9 @@ summary(contrast(lsmFlyer, method="pairwise"), infer=c(T,T))
 # Code from text p335
 # Testing LOF of ancova model: 2 ways
 anova(model3, model1)
+
+# first three terms of the model give the reduced model
+# Since fTrtmt has been entered into the model last
+# its type 1 and 3 sums of squares will be the same
 model4 <- lm(Break ~ fBlock + fFlyer + Twist + fTrtmt, data=cotton.data)
 anova(model4)

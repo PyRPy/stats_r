@@ -10,6 +10,7 @@ head(plasma.data, 3)
 # Analysis of day 1 data
 day1.data <- subset(plasma.data, Day==1) # Keep data with "Day==1"
 model2 <- lm(y ~ fBlock + fTrtmt, data=day1.data)
+summary(model2) # anova different than linear regression format
 anova(model2)
 drop1(model2, ~., test="F")
 

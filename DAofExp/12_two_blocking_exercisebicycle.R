@@ -3,7 +3,7 @@
 
 # Table 12.12, p420
 bike.data <- read.table("Data/exercise.bicycle.txt", header=T)
-head(bike.data, 3)
+head(bike.data, 3) # different numbers than in textbook page - 421
 
 # Create factor variables
 bike.data <- within(bike.data, 
@@ -57,11 +57,11 @@ bike.data <- within(bike.data,
                     fSpeed=factor(Speed); fPedal=factor(Pedal); fTrtmt=factor(Trtmt) })
 
 # ANOVA: factorial effects
-modelFE <- lm(Pulse ~ fDay + fSubject + Durat*Speed*Pedal, 
-              data=bike.data)
+# modelFE <- lm(Pulse ~ fDay + fSubject + Durat*Speed*Pedal, 
+#               data=bike.data)
 
-# modelFE <- lm(Pulse ~ fDay + fSubject + fDurat*fSpeed*fPedal, 
-#              data=bike.data)
+modelFE <- lm(Pulse ~ fDay + fSubject + fDurat*fSpeed*fPedal,
+             data=bike.data)
 
 summary(modelFE)
 anova(modelFE)

@@ -35,8 +35,10 @@ plikel.vec <- plsimple(beta.vec)
 # Figure 5.2.1
 # # # # # # # # # #
 
-plot(plikel.vec ~ beta.vec, type="l", xlab="beta", ylab="log partial likelihood",
-   cex.axis=1.5, cex.lab=1.5, lwd=2, col="black", xlim=c(-4, 1.4), ylim=c(-5.5, -3.5))
+plot(plikel.vec ~ beta.vec, type="l", 
+     xlab="beta", ylab="log partial likelihood",
+     cex.axis=1.5, cex.lab=1.5, lwd=2, col="black", 
+     xlim=c(-4, 1.4), ylim=c(-5.5, -3.5))
 
 result <- optim(par=0, fn = plsimple, method = "L-BFGS-B",
                 control=list(fnscale = -1), lower = -3, upper = 1)
@@ -61,7 +63,7 @@ grp <- trt
 result.cox <- coxph(Surv(tt, status) ~ grp)
 summary(result.cox)
 
-install.packages("numDeriv")    # must be done once
+# install.packages("numDeriv")    # must be done once
 library(numDeriv)   # must be downloaded from CRAN and installed
 grad(func=plsimple, x=0)
 hessian(func=plsimple, x=result$par)
@@ -76,9 +78,7 @@ result.cox$wald.test  # compare to model output
 betahat <- result$par
 2*(plsimple(betahat) - plsimple(0))   # likelihood ratio test
 
-# # # # # # # # # # # # #
 # Section 5.6 tied survival times
-# # # # # # # # # # # # #
 
 tt <- c(7, 6, 6, 5, 2, 4, 4, 1, 3, 1)
 status <- c(0, 1, 0, 0, 1, 1, 1, 1, 0, 1)
@@ -103,20 +103,18 @@ loglikDiscrete <- function(b) {
   result
   }
 
-result.optim.continuous <- optim(par=1.4, fn=loglikContinuous, method="BFGS",
-  control=list(fnscale = -1) )
+result.optim.continuous <- optim(par=1.4, fn=loglikContinuous, 
+                                 method="BFGS",
+                                 control=list(fnscale = -1) )
 result.optim.discrete <- optim(par=1.4, fn=loglikDiscrete, method="BFGS",
-  control=list(fnscale = -1) )
+                               control=list(fnscale = -1) )
 result.optim.continuous$par
 # [1] 1.838603
 result.optim.discrete$par
 # [1] 1.856768
 result.coxph$coef     # same as "discrete" method
 
-# # # # # # # # # # # # # #
 # Dection 5.7 Left truncation
-# # # # # # # # # # # # # #
-
 
 tt <- c(6, 7, 10, 15, 19, 25)
 status <- c(1, 0, 1, 1, 0, 1)
@@ -133,17 +131,18 @@ data.frame(tm.enter, tm.exit, status, grp)
 
 coxph(Surv(tm.enter, tm.exit, status) ~ grp)
 
-# # # # # # # # # # # # #
 # Channing House data
-# # # # # # # # # # # # #
 
 library(asaur)
 
 # add entryYears and exitYears to data set, as in Section 3.5
 ChanningHouse <- within(ChanningHouse, {
-   entryYears <- entry/12
-   exitYears <- exit/12})
+                        entryYears <- entry/12
+                        exitYears <- exit/12})
 
 channing68 <- ChanningHouse[ChanningHouse$exitYears >= 68,]
 
 coxph(Surv(entryYears, exitYears, cens) ~ sex, data=channing68)
+
+# result shows that men have a higher hazard (and hence lower survival) 
+# than do women, but this difference is not statistically significant

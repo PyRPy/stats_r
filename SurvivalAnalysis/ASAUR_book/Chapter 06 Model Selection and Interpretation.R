@@ -50,10 +50,6 @@ coxph(Surv(ttAll, status) ~ trt + genotype)
 
 # 6.2 Categorical and Continuous Covariates -------------------------------
 
-# # # # # # # # # # # #
-# Section 6.2   Categorical and continuous covariates
-# # # # # # # # # # # #
-
 race <- factor(c("black", "black", "white", "white", "other", 
            "other"))
 age <- c(48, 52, 87, 82, 67, 53)
@@ -81,9 +77,8 @@ rm(age)
 rm(tt)
 rm(status)
 
-# # # # # # # # # # # #
-# Section 6.3    hypothesis testing for nested models
-# # # # # # # # # # # #
+
+# 6.3 Hypothesis Testing for Nested Models --------------------------------
 
 library(asaur)
 library(survival)
@@ -127,7 +122,7 @@ label.factors <- c("Treatment Group", "   triple therapy", "   patch", "",
    "Employment", "   full time", "   other", "   part time",
    "", "Age group", "   21-34", "   35-49", "   50-64", "   65+")
    
-install.packages("forestplot")  # must do this once
+# install.packages("forestplot")  # must do this once
 library(forestplot)
 
 forestplot(label.factors,
@@ -143,9 +138,8 @@ forestplot(label.factors,
   txt_gp=fpTxtGp(label=gpar(cex=1.3)),
   new_page=T)
 
-# # # # # # # # # # # #
-# Section 6.4   Akaike Information Criterion for non-nested models
-# # # # # # # # # # # #
+# 6.4 The Akaike Information Criterion for Comparing Non-nested Mo --------
+
 
 AIC(modelA.coxph) 
 AIC(modelB.coxph) 
@@ -162,11 +156,12 @@ result.step <- step(modelAll.coxph, scope=list(upper=~ grp +
             longestNoSmoke, lower=~grp) )
 result.step
 
-# # # # # # # # # # # #
-# Section 6.5  
-# # # # # # # # # # # #
-            
-modelS4.coxph <- coxph(Surv(ttr, relapse) ~ grp + employment + pspline(age, df=4) ) 
+# 6.5 Including Smooth Estimates of Continuous Covariates in a Sur --------
+# 6.5 Including Smooth Estimates of Continuous Covariates in a 
+# Survival Model
+
+modelS4.coxph <- coxph(Surv(ttr, relapse) ~ grp + 
+                         employment + pspline(age, df=4) ) 
 modelS4.coxph
  
 termplot(modelS4.coxph, se=T, terms=3, ylabs="Log hazard") 

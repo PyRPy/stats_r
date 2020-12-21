@@ -91,9 +91,7 @@ result.sch.resid <- cox.zph(result.panc, transform=function(pfs) log(pfs))
 plot(result.sch.resid, cex.axis=1.5, cex.lab=1.5)
 abline(coef(result.panc2.tt), col="red")
 
-# # # # # # # # # # # #
-# Section 8.2.2 
-# # # # # # # # # # # #
+# 8.2.2 Time Dependent Variables That Increase Linearly with Time
 
 coxph(Surv(time, status==2) ~ age, data=lung)
 
@@ -102,6 +100,3 @@ coxph(Surv(time, status==2) ~ tt(age), data=lung,
   tt=function(x, t, ...) {
     age <- x + t/365.25
     age})
-    
-    
-

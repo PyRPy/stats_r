@@ -1,0 +1,28 @@
+---
+title: "discrete_distributions"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Discrete Distributions Summary
+### Bernoulli 
+```{r}
+# Example 2.4-3
+dbinom(1, 5, 0.2) / 5
+```
+```{r}
+# Example 2.4-4
+dbinom(3, 5, 0.8) / choose(5, 3)
+# 0.02048
+```
+```{r}
+# check with textbook
+0.8^3 * 0.2^2
+```
+
+
+
+## Reference: Probability and Statistical Inference, 10th Edition

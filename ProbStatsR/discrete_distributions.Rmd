@@ -22,7 +22,36 @@ dbinom(3, 5, 0.8) / choose(5, 3)
 # check with textbook
 0.8^3 * 0.2^2
 ```
+### Binomial
+```{r}
+# Example 2.4-5
+dbinom(2, 8, 0.2)
+```
+```{r}
+# use f(x) 
+choose(8,2)*0.2^2 * 0.8^6
+# 0.2936013
+```
 
+### Hypergeometric 
+```{r}
+# Example 2.5-2
+dhyper(2, 10, 40, 7)
+# 0.2964463
+```
+```{r}
+# you can also use definition to find the probability
+choose(10, 2) * choose(40, 5) / choose(50, 7)
+```
+### Negative Binomial
+```{r}
+# Example 2.6-2
+choose(11, 9) * dnbinom(12, 10, 0.8) # not working
+```
+```{r}
+# use formula
+choose(11, 9) * 0.8^10 * 0.2^2
+```
 
 
 ## Reference: Probability and Statistical Inference, 10th Edition

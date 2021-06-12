@@ -53,5 +53,18 @@ choose(11, 9) * dnbinom(12, 10, 0.8) # not working
 choose(11, 9) * 0.8^10 * 0.2^2
 ```
 
+### Poisson 
+```{r}
+# Example 2.7-3
+dpois(0, 4)
+```
+```{r}
+ppois(4, 4)
+```
+```{r}
+# example 2.7-4
+1 - ppois(4, 6) # pay attention to reverse thinking !
+```
+
 
 ## Reference: Probability and Statistical Inference, 10th Edition

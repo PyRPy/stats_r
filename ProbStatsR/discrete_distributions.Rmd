@@ -66,5 +66,18 @@ ppois(4, 4)
 1 - ppois(4, 6) # pay attention to reverse thinking !
 ```
 
+* comparison between sample size and p
+* based on Example 2.6-6
+```{r}
+x <- 0:25
+plot(x, dpois(x, 2.5), type = 'h', ylim = c(0, 0.3))
+points(x, dbinom(x, 25, 0.1), col = 'red')
+```
+```{r}
+# to show the gap between binomial and poission is large for large p = 0.3
+x <- 0:40
+plot(x, dpois(x, 12), type = 'h', ylim = c(0, 0.2))
+points(x, dbinom(x, 40, 0.3), col = 'red')
+```
 
 ## Reference: Probability and Statistical Inference, 10th Edition

@@ -1,0 +1,65 @@
+---
+title: "cars_fuel_economy.Rmd"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## EDA for Cars Fuel Consumption
+```{r message=FALSE, warning=FALSE}
+library(dplyr)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(readxl)
+dat <- read_excel("21tstcar-2021-03-02.xlsx")
+```
+
+### Column Names
+```{r}
+names(dat)
+```
+
+### Manufacturers
+```{r}
+table(dat$`Vehicle Manufacturer Name`)
+```
+```{r}
+dat %>% group_by(`Vehicle Manufacturer Name`) %>% 
+  count()
+```
+
+### Histogram of MPG
+```{r}
+mpg <- dat %>% select(RND_ADJ_FE) %>% 
+   na.omit() %>% 
+  filter(RND_ADJ_FE <= 100)
+
+hist(mpg$RND_ADJ_FE)
+```
+
+### Histogram of CO2 Emissions
+```{r}
+hist(dat$`CO2 (g/mi)`)
+```
+
+```{r}
+summary(dat$`CO2 (g/mi)`)
+```
+
+### MPG vs Horsepower
+```{r}
+dat %>% select(`Rated Horsepower`, RND_ADJ_FE) %>% 
+  filter(RND_ADJ_FE <= 100 & `Rated Horsepower` <= 1000 ) %>% 
+  plot()
+```
+
+### MPG vs CO2 Emissions
+```{r}
+dat %>% select(RND_ADJ_FE, `CO2 (g/mi)` ) %>% 
+  filter(RND_ADJ_FE <= 100) %>% 
+  plot()
+
+```

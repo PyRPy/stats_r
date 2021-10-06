@@ -67,3 +67,99 @@ print(m1, pars = c("mu_1", "mu_2", "beta", "sigma"))
 # mu_2   1.30       0 0.07  1.16  1.25  1.30  1.35  1.44  4433    1
 # beta  -0.51       0 0.12 -0.75 -0.59 -0.51 -0.42 -0.26  1754    1
 # sigma  0.46       0 0.04  0.39  0.43  0.46  0.49  0.55  2237    1
+
+## Within-Subject Comparisons
+lies %>% 
+  select(PP, Gender, LDMRT, TDMRT) %>% 
+  gather(key = "veracity", value = "RT", LDMRT:TDMRT) %>% 
+  ggplot(aes(x = RT, col = veracity)) + 
+  geom_density(bw = "SJ")
+
+# paired t-test
+t.test(lies$TDMRT, lies$LDMRT, paired = TRUE)
+
+# Bayesian Normal Model
+library(rstan)
+group_comparison_paired = "
+data {
+  int<lower=0> N;  // number of observations
+  vector[N] y1;  // response time (repeated measure 1);
+  vector[N] y2;  // response time (repeated measure 2);
+}
+parameters {
+  real<lower=0> mu_1;  // mean of group 1
+  real beta;  // difference in means
+  real<lower=0> sigma;  // residual SD
+  vector[N] zu;  // individual difference parameters (scaled)
+  real<lower=0> tau;  // standard deviation of indivdiual difference
+}
+transformed parameters {
+  real<lower=0> mu_2 = mu_1 + beta; 
+  vector[N] u = zu * tau;
+}
+model {
+  y1 ~ normal(mu_1 + u, sigma);
+  y2 ~ normal(mu_2 + u, sigma);
+  // prior
+  mu_1 ~ normal(0.5, 2.5);
+  beta ~ normal(0, 2.5);
+  sigma ~ student_t(4, 0, 2.5);
+  zu ~ std_normal();
+  // hyperprior
+  tau ~ student_t(4, 0, 2.5);
+}
+generated quantities {
+  real y1rep[N];
+  real y2rep[N];
+  real cohen_d = (mu_2 - mu_1) / sqrt(sigma^2 + tau^2);
+  for (i in 1:N) {
+    y1rep[i] = normal_rng(mu_1 + u[i], sigma);
+    y2rep[i] = normal_rng(mu_2 + u[i], sigma);
+  }
+}
+"
+m4 <- stan(model_code = group_comparison_paired, 
+           data = list(N = 63, 
+                       y1 = lies_cc$TDMRT, 
+                       y2 = lies_cc$LDMRT), 
+           pars = "zu", include = FALSE, seed = 104134)
+
+# Use the `broom` package to generate nicely formatted table
+print(m4, pars = c("mu_1", "mu_2", "beta", "sigma", "tau", "cohen_d"))
+
+plot(m4, pars = c("mu_1", "mu_2", "beta", "sigma", "tau", "cohen_d"))
+
+# Posterior Predictive Check
+library(bayesplot)
+# Observed data
+y1 <- lies_cc$TDMRT
+y2 <- lies_cc$LDMRT
+# Replicated data (randomly sampling 100)
+y1rep <- as.matrix(m4, pars = "y1rep")[sample.int(2000, 100), ]
+y2rep <- as.matrix(m4, pars = "y2rep")[sample.int(2000, 100), ]
+
+ppc_dens_overlay(y1, yrep = y1rep)
+ppc_dens_overlay(y2, yrep = y2rep)
+
+ppc_intervals(y1, yrep = y1rep)
+ppc_intervals(y2, yrep = y2rep)
+
+
+# Using brms --------------------------------------------------------------
+library(brms)
+lies_long <- lies %>% 
+  select(PP, Gender, LDMRT, TDMRT) %>% 
+  gather(key = "veracity", value = "RT", LDMRT:TDMRT)
+
+m2_brm <- brm(RT ~ veracity + (1 | PP), data = lies_long, 
+              family = student(), 
+              prior = c(prior(normal(0, 1), class = "b"), 
+                        prior(student_t(4, 0, 2.5), class = "sd"), 
+                        prior(student_t(4, 0, 2.5), class = "sigma")))
+
+
+# sjPlot::tab_model(m2_brm, show.ci50 = FALSE)  # broken in newest version of `brms`
+plot(m2_brm)
+pp_check(m2_brm, nsamples = 100)
+
+pp_check(m2_brm, type = "intervals_grouped", group = "veracity")

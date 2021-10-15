@@ -2,6 +2,8 @@
 # Chapter 11 Generalized Linear Models ------------------------------------
 library(tidyverse)
 library(brms)
+library(bayesplot)
+
 # https://bookdown.org/marklhc/notes_bookdown/generalized-linear-models.html
 # how common it was for researchers to report marginal  p-values
 
@@ -68,7 +70,6 @@ logistic_beta0 <- plogis(draws_beta0)
 # Summarize the posterior distribution
 psych::describe(logistic_beta0)
 
-library(bayesplot)
 mcmc_areas(m1_bern, pars = "b_Intercept", 
            transformations = list("b_Intercept" = "plogis"), bw = "SJ")
 
@@ -106,3 +107,21 @@ m1_pred <- as.numeric(m1_pred > mean(marginalp$marginal_p))
 pROC::roc(response = marginalp$marginal_p, 
           predictor = predict(m1_bern, type = "response")[ , "Estimate"], 
           plot = TRUE, print.auc = TRUE)
+
+
+# Binomial Logistic Regression --------------------------------------------
+marginalp_agg <- 
+  summarise(group_by(marginalp, Year10), 
+            marginal_p = sum(marginal_p), n = n())
+head(marginalp_agg)
+
+# using a binomial distribution for the outcome, instead of Bernoulli:
+m1_bin <- brm(marginal_p | trials(n) ~ Year10, 
+              data = marginalp_agg, 
+              family = binomial(link = "logit"), 
+              prior = prior(student_t(4, 0, .875), class = "b"), 
+              # Note: no sigma 
+              seed = 1340)
+
+pp_check(m1_bin, type = "intervals")
+# the fit wasn’t particularly good in this case

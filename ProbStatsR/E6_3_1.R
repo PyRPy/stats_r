@@ -23,3 +23,8 @@ quantile(time_in_order, probs = c(0.5, 0.8))
 
 # find first quantile and third quantile of the sample
 quantile(time_in_order, probs = c(0.25, 0.75))
+
+# corrections based on textbook definitions (k = n + 1, k=40,  40 x 0.5 = 20th)
+time_in_order[20]
+time_in_order[32]
+time_in_order[30]

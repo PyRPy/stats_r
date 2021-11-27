@@ -32,6 +32,7 @@ head(hsb2)
 
 t.test(write, mu = 50)
 hist(write)
+t.test(write, mu = 50, alternative = "greater")
 
 qqnorm(write)
 qqline(write, col = "blue", lwd = 2)
@@ -40,7 +41,7 @@ qqline(write, col = "blue", lwd = 2)
 # One sample median test --------------------------------------------------
 boxplot(write) # median is close to 55
 wilcox.test(write, mu = 50)
-median(write)
+median(write) # 54
 
 
 # Binomial test -----------------------------------------------------------
@@ -53,7 +54,6 @@ phat = sum(female) / length(female) # 0.545
 
 chisq.test(table(race), p = c(10, 10, 10, 70) / 100)
 table(race)
-
 
 # Two independent samples t-test ------------------------------------------
 
@@ -88,7 +88,7 @@ kruskal.test(write, prog)
 # Paired t-test -----------------------------------------------------------
 
 t.test(write, read, paired = TRUE)
-
+boxplot(write, read) # overlap
 
 # Wilcoxon signed rank sum test -------------------------------------------
 
@@ -105,8 +105,8 @@ mcnemar.test(X)
 
 ## Agresti (1990), p. 350.
 ## Presidential Approval Ratings.
-##  Approval of the President's performance in office in two surveys,
-##  one month apart, for a random sample of 1600 voting-age Americans.
+## Approval of the President's performance in office in two surveys,
+## one month apart, for a random sample of 1600 voting-age Americans.
 Performance <-
   matrix(c(794, 86, 150, 570),
          nrow = 2,
@@ -182,7 +182,7 @@ glm(female ~ read + write, family = binomial)
 # Ordered logistic regression ---------------------------------------------
 require(MASS)
 
-## Creat order variable write3 as a factor with levels 1, 2, and 3
+## Create order variable write3 as a factor with levels 1, 2, and 3
 hsb2$write3 <- cut(hsb2$write, c(0, 48, 57, 70),  right = TRUE, labels = c(1,2,3))
 table(hsb2$write3)
 

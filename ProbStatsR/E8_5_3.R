@@ -21,14 +21,21 @@ sum(dat > 5.9) # 17
 
 # b) wilcoxon sign test
 diff_abs = abs(dat - 5.9)
-rank_obs = order(diff_abs)
+# rank_obs = order(diff_abs) # correction here
+rank_obs = rank(diff_abs)
 
-W = -sum(rank_obs[1:8]) + sum(rank_obs[9:25])
-
+W = -sum(rank_obs[1:8]) + sum(rank_obs[9:25]) # same as textbook solution
+W2 = sum(rank_obs[9:25])
 n = length(dat)
-Z = (W - 0)/sqrt(n * (n+1) * (2*n + 1)/6) # 2.758
+Z = (W - 0)/sqrt(n * (n+1) * (2*n + 1)/6) # 2.300 after correction
 
 # use t-test
 mu = mean(dat)
 x_sd = sd(dat)
 t_stat = (mu - 5.9)/(x_sd/sqrt(n)) # 2.61, df = 24
+
+# use R base function
+wilcox.test(dat, mu = 5.9, alternative = "greater")
+
+# V = 248, p-value = 0.01014
+# alternative hypothesis: true location is greater than 5.9

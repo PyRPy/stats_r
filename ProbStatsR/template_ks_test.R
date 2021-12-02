@@ -22,10 +22,34 @@ x2 <- rnorm(50, -1)
 plot(ecdf(x), xlim=range(c(x, x2)))
 plot(ecdf(x2), add=TRUE, lty="dashed")
 t.test(x, x2, alternative="g")
-wilcox.test(x, x2, alternative="g")
-ks.test(x, x2, alternative="l")
 
+# Welch Two Sample t-test
+# 
+# data:  x and x2
+# t = 4.3915, df = 97.784, p-value = 1.426e-05
+# alternative hypothesis: true difference in means is greater than 0
+# 95 percent confidence interval:
+#   0.5450745       Inf
+# sample estimates:
+#   mean of x   mean of y 
+# -0.08862682 -0.96514122
+
+wilcox.test(x, x2, alternative="g")
+# Wilcoxon rank sum test with continuity correction
+# 
+# data:  x and x2
+# W = 1847, p-value = 1.96e-05
+# alternative hypothesis: true location shift is greater than 0
+
+
+ks.test(x, x2, alternative="l")
+# Two-sample Kolmogorov-Smirnov test
+# 
+# data:  x and x2
+# D^- = 0.44, p-value = 6.252e-05
+# alternative hypothesis: the CDF of x lies below that of y
 #########################################################
+
 # TBA, JWE new examples added for discrete distributions:
 
 x3 <- sample(1:10, 25, replace=TRUE)

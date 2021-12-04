@@ -1,5 +1,9 @@
 
 # Lesson 22: Kolmogorov-Smirnov Goodness-of-Fit Test ----------------------
+# Example 22-1 
+x = c(0, 1, 2, 2, 4, 6, 6, 7)
+ecdf(x)
+plot(ecdf(x))
 
 # Example 22-2
 x = c(1.41, 0.26, 1.97, 0.33, 0.55, 0.77, 1.46, 1.18)

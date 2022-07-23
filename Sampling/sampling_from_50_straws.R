@@ -1,12 +1,17 @@
 
 # Sampling from 50 Straws -------------------------------------------------
+# This sampling method is for 'draw 6 x yao' to determine a 'gua' use 
+# 'yin' or 'yang' to represent changes;
 
-# Second round sampling ---------------------------------------------------
+# 'yin' in yiching is like 0  while 'yang' is 1, so the gua is like a 
+# six digits like 011011
+
+# The sampling method is farily a 'complicated' process, comprising 3 steps
 
 draw_yao <- function(straw_start) {
   
   straw_half_left <- sample(straw_start, 
-                            floor(length(straw_start)/2.0) + sample(1:4))
+                            floor(length(straw_start)/2.0) + sample(1:4, 1))
   straw_half_right <- setdiff(straw_start, straw_half_left)
   
  
@@ -54,7 +59,8 @@ gua <- c()
 for (i in (1:6)) {
   
   straw_ID <- c(1:50)
-  straw_start1 <- sample(straw_ID, length(straw_ID)-1)
+  size_temp <- length(straw_ID)-1
+  straw_start1 <- sample(straw_ID, 49)
   yao_temp <- yao_number(straw_start1)
   gua <- c(gua, yao_temp)
   cat("yao", i,  " ",  yao_temp, "\n")

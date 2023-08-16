@@ -291,3 +291,221 @@ radon.bugs.3 <- bugs (radon.data,
                       debug=TRUE )
 ## print the results
 print (radon.bugs.2)
+
+# 16.6 Predictions for new observations and new groups --------------------
+# run the first section to get the data ready for the following sections
+## Get the county-level predictor
+srrs2.fips <- srrs2$stfips*1000 + srrs2$cntyfips
+cty <- read.table ("ARM_Data/radon/cty.dat", header=T, sep=",")
+usa.fips <- 1000*cty[,"stfips"] + cty[,"ctfips"]
+usa.rows <- match (unique(srrs2.fips[mn]), usa.fips)
+uranium <- cty[usa.rows,"Uppm"]
+u <- log (uranium)
+
+## Extend the dataset
+radon.data <- list ("n", "J", "x", "y", "county", "u")
+data.save <- save ("n", "y", "county", "x", "u", file="radon.data")
+n <- n + 1
+y <- c (y, NA)
+county <- c (county, 26)
+x <- c (x, 1)
+u <- c (u, 1)
+
+## Fit the model
+radon.inits <- function (){
+  list (a=rnorm(J), b=rnorm(1), g.0=rnorm(1), g.1=rnorm(1),
+        sigma.y=runif(1), sigma.a=runif(1))
+}
+
+radon.parameters <- c ("a", "b", "sigma.y", "sigma.a")
+radon.parameters <- c (radon.parameters, "y.tilde")
+
+# varying-intercept model
+model.radon.2a <- function() {
+  for (i in 1:n){
+    y[i] ~ dnorm (y.hat[i], tau.y)
+    y.hat[i] <- a[county[i]] + b*x[i]
+  }
+  y.tilde <- y[n]
+  b ~ dnorm (0, .0001)
+  tau.y <- pow(sigma.y, -2)
+  sigma.y ~ dunif (0, 100)
+
+  for (j in 1:J){
+    a[j] ~ dnorm (a.hat[j], tau.a)
+    a.hat[j] <- g.0 + g.1*u[j]
+  }
+  g.0 ~ dnorm (0, .0001)
+  g.1 ~ dnorm (0, .0001)
+  tau.a <- pow(sigma.a, -2)
+  sigma.a ~ dunif (0, 100)
+}
+
+radon.2a <- bugs(radon.data,
+                 radon.inits,
+                 radon.parameters,
+                 model.radon.2a,
+                 n.chains=3,
+                 n.iter=500,
+                 debug=TRUE )
+
+attach.bugs (radon.2a)
+quantile (exp (y.tilde), c(.25, .75))
+quantile (exp (y.tilde), c(.025, .975))
+
+#        2.5%     97.5%
+#   0.4787585 9.4225108
+
+## New unit in a new group
+u.tilde <- mean (u)
+
+load ("radon.data")
+data.save <- save ("n", "y", "county", "x", "J", "u", file="radon.data")
+n <- n + 1
+y <- c (y, NA)
+county <- c (county, J+1)
+x <- c (x, 1)
+J <- J + 1
+u <- c (u, u.tilde)
+
+radon.inits <- function (){
+  list (a=rnorm(J), b=rnorm(1), g.0=rnorm(1), g.1=rnorm(1),
+        sigma.y=runif(1), sigma.a=runif(1))
+}
+
+radon.parameters <- c ("a", "b", "sigma.y", "sigma.a", "g.0", "g.1")
+radon.parameters <- c (radon.parameters, "y.tilde")
+
+radon.2b <- bugs (radon.data,
+                  radon.inits,
+                  radon.parameters,
+                  model.radon.2a,
+                  n.chains=3,
+                  n.iter=500,
+                  debug=TRUE )
+
+attach.bugs (radon.2b)
+quantile (exp (y.tilde), c(.25, .75))
+#        25%      75%
+#   1.389960 3.744361
+
+## Prediction using R
+radon.inits <- function (){
+  list (a=rnorm(J), b=rnorm(1), g.0=rnorm(1), g.1=rnorm(1),
+        sigma.y=runif(1), sigma.a=runif(1))
+}
+
+radon.parameters <- c ("a", "b", "sigma.y", "sigma.a", "g.0", "g.1")
+
+radon.2c <- bugs (radon.data,
+                 radon.inits,
+                 radon.parameters,
+                 model.radon.2a,
+                 n.chains=3,
+                 n.iter=500,
+                 debug=TRUE )
+
+attach.bugs (radon.2c)
+
+y.tilde <- rnorm (n.sims, a[,26] + b*1, sigma.y)
+quantile (exp (y.tilde), c(.25, .75))
+#        25%      75%
+#   1.165672 3.362505
+
+a.tilde <- rnorm (n.sims, g.0 + g.1*u.tilde, sigma.a)
+y.tilde <- rnorm (n.sims, a.tilde + b*1, sigma.y)
+quantile (exp (y.tilde), c(.25, .75))
+#        25%      75%
+#   1.425716 3.878407
+
+
+# 16.7 Fake-data simulation -----------------------------------------------
+
+## Set up and call Bugs
+radon.data <- list ("n", "J", "x", "y", "county", "u")
+
+radon.inits <- function (){
+  list (a=rnorm(J), b=rnorm(1), g.0=rnorm(1), g.1=rnorm(1),
+        sigma.y=runif(1), sigma.a=runif(1))
+}
+
+radon.parameters <- c ("a", "b", "sigma.y", "sigma.a", "g.0", "g.1")
+
+radon.2d <- bugs (radon.data, radon.inits, radon.parameters, model.radon.2a,
+                 n.chains=3, n.iter=500, debug=TRUE )
+
+attach.bugs (radon.2d)
+
+## Specifying the unmodeled parameters
+b.true <- median (b)
+g.0.true <- median (g.0)
+g.1.true <- median (g.1)
+sigma.y.true <- median (sigma.y)
+sigma.a.true <- median (sigma.a)
+
+## Simulating the varying coefficients
+a.true <- rep (NA, J)
+for (j in 1:J){
+  a.true[j] <- rnorm (1, g.0.true + g.1.true*u[j], sigma.a.true)
+}
+
+## Simulating fake data
+y.fake <- rep (NA, n)
+for (i in 1:n){
+  y.fake[i] <- rnorm (1, a.true[county[i]] + b.true*x[i], sigma.y.true)
+}
+hist(y.fake)
+
+## Inference and comparison to "true" values
+
+# specify the data
+radon.data.fake <- list (n=n, J=J, y=y.fake, county=county, x=x, u=u)
+
+# specify the rest of inputs
+
+radon.inits <- function (){
+  list (a=rnorm(J), b=rnorm(1), g.0=rnorm(1), g.1=rnorm(1),
+        sigma.y=runif(1), sigma.a=runif(1))
+}
+
+radon.parameters <- c ("a", "b", "sigma.y", "sigma.a", "g.0", "g.1")
+
+radon.2.fake <- bugs (radon.data.fake,
+                      radon.inits,
+                      radon.parameters,
+                      model.radon.2a,
+                      n.chains=3,
+                      n.iter=500,
+                      debug=TRUE )
+
+print (radon.2.fake)
+
+# Current: 3 chains, each with 500 iterations (first 250 discarded)
+# Cumulative: n.sims = 750 iterations saved
+#            mean   sd   2.5%    25%    50%    75%  97.5% Rhat n.eff
+# a[1]        1.0  0.2    0.6    0.9    1.0    1.1    1.4  1.0   750
+# a[2]        0.9  0.1    0.7    0.8    0.9    0.9    1.1  1.0   750
+# a[3]        1.5  0.2    1.2    1.4    1.5    1.6    1.9  1.0   750
+# a[4]        1.1  0.2    0.8    1.0    1.1    1.2    1.4  1.0   220
+# a[85]       1.7  0.2    1.3    1.6    1.7    1.8    2.1  1.0   490
+# a[86]       1.6  0.2    1.2    1.5    1.6    1.7    2.0  1.0   750
+# b          -0.7  0.1   -0.9   -0.8   -0.7   -0.7   -0.6  1.0   750
+# sigma.y     0.7  0.0    0.7    0.7    0.7    0.8    0.8  1.0   240
+# sigma.a     0.2  0.0    0.1    0.2    0.2    0.2    0.3  1.0   220
+# g.0         1.5  0.0    1.4    1.5    1.5    1.5    1.6  1.0   360
+# g.1         0.8  0.1    0.6    0.7    0.8    0.9    1.0  1.1    61
+# deviance 2060.7 12.2 2037.0 2052.0 2060.0 2070.0 2083.3  1.0   410
+
+## Checking coverage of 50% intervals
+attach (radon.2.fake)
+
+# coverage for alpha1
+a.true[1] > quantile (a[1,], .25) & a.true[1] < quantile (a[1,], .75)
+
+# coverage for the 85 alphas
+cover.50 <- rep (NA, J)
+for (j in 1:J){
+  cover.50[j] <- a.true[j] > quantile (a, .25) &
+    a.true[j] < quantile (a, .75)
+}
+mean (cover.50)

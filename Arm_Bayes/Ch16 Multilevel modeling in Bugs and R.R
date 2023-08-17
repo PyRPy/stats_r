@@ -509,3 +509,57 @@ for (j in 1:J){
     a.true[j] < quantile (a, .75)
 }
 mean (cover.50)
+
+
+# 16.8 The principles of modeling in Bugs ---------------------------------
+
+## Set up and call Bugs
+radon.data <- list ("n", "J", "x", "y", "county", "u")
+
+radon.inits <- function (){
+  list (a=rnorm(J), b=rnorm(1), g.0=rnorm(1), g.1=rnorm(1),
+        sigma.y=runif(1), sigma.a=runif(1))
+}
+
+radon.parameters <- c ("a", "b", "sigma.y", "sigma.a", "g.0", "g.1")
+
+# varying-intercept model
+model.radon.2a <- function() {
+  for (i in 1:n){
+    y[i] ~ dnorm (y.hat[i], tau.y)
+    y.hat[i] <- a[county[i]] + b*x[i]
+  }
+  y.tilde <- y[n]
+  b ~ dnorm (0, .0001)
+  tau.y <- pow(sigma.y, -2)
+  sigma.y ~ dunif (0, 100)
+
+  for (j in 1:J){
+    a[j] ~ dnorm (a.hat[j], tau.a)
+    a.hat[j] <- g.0 + g.1*u[j]
+  }
+  g.0 ~ dnorm (0, .0001)
+  g.1 ~ dnorm (0, .0001)
+  tau.a <- pow(sigma.a, -2)
+  sigma.a ~ dunif (0, 100)
+}
+
+radon.3 <- bugs (radon.data, radon.inits, radon.parameters, model.radon.2a,
+                 n.chains=3, n.iter=500, debug=TRUE )
+print(radon.3)
+
+
+## Define parameters and include them in the data
+sigma.y <- .7
+sigma.alpha <- .4
+radon.data <- list ("n", "J", "x", "y", "county", "u", "sigma.y", "sigma.alpha")
+
+radon.inits <- function (){
+  list (a=rnorm(J), b=rnorm(1), g.0=rnorm(1), g.1=rnorm(1))
+}
+
+radon.parameters <- c ("a", "b", "sigma.y", "sigma.alpha", "g.0", "g.1")
+
+radon.3b <- bugs (radon.data, radon.inits, radon.parameters, model.radon.2a,
+                 n.chains=3, n.iter=500, debug=TRUE )
+print(radon.3b)

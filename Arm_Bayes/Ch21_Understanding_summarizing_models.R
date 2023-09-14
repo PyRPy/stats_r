@@ -102,3 +102,150 @@ e.a <- E.B[,,1]
 e.b <- E.B[,,2]
 rsquared.a <- 1 - mean (apply (e.a, 1, var)) / mean (apply (a, 1, var))
 rsquared.b <- 1 - mean (apply (e.b, 1, var)) / mean (apply (b, 1, var))
+
+# 21.6 Summarizing the amount of partial pooling --------------------------
+
+## Extend the dataset
+radon.data <- list ("n", "J", "x", "y", "county", "u")
+data.save <- save ("n", "y", "county", "x", "u", file="radon.data")
+n <- n + 1
+y <- c (y, NA)
+county <- c (county, 26)
+x <- c (x, 1)
+u <- c (u, 1)
+
+## Fit the model
+model.radon.ch21.6a <- function() {
+  for (i in 1:n){
+    y[i] ~ dnorm (y.hat[i], tau.y)
+    y.hat[i] <- a[county[i]] + b*x[i]
+  }
+  b ~ dnorm (0, .0001)
+  tau.y <- pow(sigma.y, -2)
+  sigma.y ~ dunif (0, 100)
+
+  for (j in 1:J){
+    a[j] ~ dnorm (a.hat[j], tau.a)
+    a.hat[j] <- g.0 + g.1*u[j]
+    e.a[j] <- a[j] - a.hat[j]
+  }
+  g.0 ~ dnorm (0, .0001)
+  g.1 ~ dnorm (0, .0001)
+  tau.a <- pow(sigma.a, -2)
+  sigma.a ~ dunif (0, 100)
+}
+
+radon.inits <- function (){
+  list (a=rnorm(J), b=rnorm(1), g.0=rnorm(1), g.1=rnorm(1),
+        sigma.y=runif(1), sigma.a=runif(1))
+}
+
+radon.parameters <- c ("a", "b", "sigma.y", "sigma.a")
+radon.parameters <- c (radon.parameters, "e.a")
+
+radon.ch21.6a <- bugs (radon.data,
+                       radon.inits,
+                       radon.parameters,
+                       model.radon.ch21.6a,
+                       n.chains=3,
+                       n.iter=500,
+                       debug=TRUE )
+
+attach.bugs (radon.ch21.6a)
+
+omega <- (sd(e.a)/sigma.a)^2
+omega <- pmin (omega, 1)
+
+## Summary pooling factor for each batch of parameters
+radon.inits <- function (){
+  list (a=rnorm(J), b=rnorm(1), g.0=rnorm(1), g.1=rnorm(1),
+        sigma.y=runif(1), sigma.a=runif(1))
+}
+
+radon.parameters <- c ("a", "b", "sigma.y", "sigma.a")
+radon.parameters <- c (radon.parameters, "e.a", "e.y")
+
+model.radon.ch21.6b <- function() {
+  for (i in 1:n){
+    y[i] ~ dnorm (y.hat[i], tau.y)
+    y.hat[i] <- a[county[i]] + b*x[i]
+    e.y[i] <- y[i] - y.hat[i]
+  }
+  b ~ dnorm (0, .0001)
+  tau.y <- pow(sigma.y, -2)
+  sigma.y ~ dunif (0, 100)
+
+  for (j in 1:J){
+    a[j] ~ dnorm (a.hat[j], tau.a)
+    a.hat[j] <- g.0 + g.1*u[j]
+    e.a[j] <- a[j] - a.hat[j]
+  }
+  g.0 ~ dnorm (0, .0001)
+  g.1 ~ dnorm (0, .0001)
+  tau.a <- pow(sigma.a, -2)
+  sigma.a ~ dunif (0, 100)
+}
+
+radon.ch21.6b <- bugs (radon.data,
+                       radon.inits,
+                       radon.parameters,
+                       model.radon.ch21.6b,
+                       n.chains=3,
+                       n.iter=500,
+                       debug=TRUE )
+
+attach.bugs (radon.ch21.6b)
+
+lambda.y <- 1 - var (apply (e.y, 2, mean))/ mean (apply (e.y, 1, var))
+lambda.a <- 1 - var (apply (e.a, 2, mean))/ mean (apply (e.a, 1, var))
+
+# if slope varies
+# lambda.b <- 1 - var (apply (e.b, 2, mean))/ mean (apply (e.b, 1, var))
+
+# 21.7 Adding a predictor can increase the residual variance --------------
+# classic linear model
+# varying-intercept model (NO FLOOR!)
+u.full <- u[county]
+model.1 <- lmer (y ~ u.full + (1 | county))
+display (model.1)
+#             coef.est coef.se
+# (Intercept) 1.33     0.03
+# u.full      0.72     0.09
+#
+# Error terms:
+#  Groups   Name        Std.Dev.
+#  county   (Intercept) 0.12
+#  Residual             0.80
+
+# add floor as an individual-level predictor
+model.2 <- lmer (y ~ u.full + x + (1 | county))
+display (model.2)
+#             coef.est coef.se
+# (Intercept)  1.47     0.04
+# u.full       0.72     0.09
+# x           -0.67     0.07
+#
+# Error terms:
+#  Groups   Name        Std.Dev.
+#  county   (Intercept) 0.16
+#  Residual             0.76
+
+# add houses with no basement as group-level predictor
+x.mean <- rep (NA, J)
+for (j in 1:J){
+  x.mean[j] <- mean(x[county==j])
+}
+x.mean.full <- x.mean[county]
+
+model.3 <- lmer (y ~ u.full + x + x.mean.full + (1 | county))
+display (model.3)
+#             coef.est coef.se
+# (Intercept)  1.39     0.05
+# u.full       0.72     0.09
+# x           -0.72     0.07
+# x.mean.full  0.41     0.20
+#
+# Error terms:
+#  Groups   Name        Std.Dev.
+#  county   (Intercept) 0.14
+#  Residual             0.76

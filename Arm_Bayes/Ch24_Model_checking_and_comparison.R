@@ -121,3 +121,44 @@ print(fit.logit.1)
 # plot(fit.logit.1)
 # print(fit.logit.1)
 
+
+# Fitting and checking a logarithmic regression model ---------------------
+## Calling predictive replications in Bugs
+# error for node y[1,2] of type GraphBinomial.Node first argument must
+# be a proportion error pos 37
+n.dogs <- nrow(y)
+n.trials <- ncol(y)
+data <- list("y", "n.dogs", "n.trials")
+inits <- function (){
+  list (b.1=rnorm(1), b.2=rnorm(1))
+}
+parameters <- c ("b.1", "b.2")
+model.dogs.logit.3 <- function() {
+  for (j in 1:n.dogs){
+    n.avoid[j,1] <- 0
+    n.shock[j,1] <- 0
+    for (t in 2:n.trials){
+      n.avoid[j,t] <- n.avoid[j,t-1] + 1 - y[j,t-1]
+      n.shock[j,t] <- n.shock[j,t-1] + y[j,t-1]
+    }
+    for (t in 1:n.trials){
+      y[j,t] ~ dbin (p[j,t], 1)
+      log(p[j,t]) <- b.1*n.avoid[j,t] + b.2*n.shock[j,t]
+    }
+  }
+  b.1 ~ dunif (-100, 0)
+  b.2 ~ dunif (-100, 0)
+}
+# https://github.com/stan-dev/example-models/blob/master/ARM/Ch.24/24.2_BehavioralLearningExperiment.R
+# in STan it is look like this
+# p.rep <- invlogit (beta[1] + beta[2]*n.avoid.rep + beta[3]*n.schok.rep)
+# y.rep[,j,t] <- rbinom (n.sims, 1, p.rep)
+fit.logit.3 <- bugs(data, inits,
+                     parameters,
+                     model.dogs.logit.3,
+                     n.chains=3,
+                     n.iter=2000,
+                     n.thin=100,
+                     debug=TRUE )
+plot(fit.logit.3)
+print(fit.logit.3)

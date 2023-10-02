@@ -153,3 +153,47 @@ pred.pos.sqrt <- rnorm (n, predict (lm.ifpos.sqrt, sis),
 pred.pos <- topcode (pred.pos.sqrt^2, 100)
 earnings.imp <- impute (earnings, pred.sign*pred.pos) # key is this combination
 
+
+# 25.5 Imputation of several missing variables ----------------------------
+
+## Variables description:
+random.imp <- function (a){
+  missing <- is.na(a)
+  n.missing <- sum(missing)
+  a.obs <- a[!missing]
+  imputed <- a
+  imputed[missing] <- sample (a.obs, n.missing, replace=TRUE) # random sampling
+  return (imputed)
+}
+# interest:  interest of entire family
+interest <- na.fix(interest)
+
+# transforming the different sources of income
+interest <- interest/1000
+
+## Simple random imputation
+interest.imp <- random.imp (interest)
+
+## Iterative regression imputation
+impute <- function (a, a.impute){
+  ifelse (is.na(a), a.impute, a)
+}
+
+n.sims <- 10
+for (s in 1:n.sims){
+  lm.1 <- lm (earnings ~ interest.imp + male + over65 + white + immig +
+                educ_r + workmos + workhrs.top + any.ssi + any.welfare + any.charity)
+  pred.1 <- rnorm (n, predict(lm.1), sigma.hat(lm.1))
+  earnings.imp <- impute (earnings, pred.1)
+
+  lm.2 <- lm (interest ~ earnings.imp + male + over65 + white + immig +
+                educ_r + workmos + workhrs.top + any.ssi + any.welfare + any.charity)
+  pred.2 <- rnorm (n, predict(lm.2), sigma.hat(lm.2))
+  interest.imp <- impute (interest, pred.2)
+}
+
+# check is any data missing after imputation
+sum(is.na(earnings.imp)) # both zero
+sum(is.na(interest.imp)) # both zero
+
+

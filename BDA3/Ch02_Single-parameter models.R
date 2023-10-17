@@ -1,5 +1,6 @@
 
 # Single-parameter models -------------------------------------------------
+library(rstan)
 library(ggplot2)
 theme_set(theme_minimal())
 library(gridExtra)
@@ -102,3 +103,42 @@ invcdf <- function(r, df) df$theta[sum(df$cs_po < r) + 1]
 
 s <- sapply(r, invcdf, df1)
 hist(s)
+
+
+# Exercise 2.11.1 ---------------------------------------------------------
+# toss 10 times coin, find probability for heads less than 3 times
+# the following code comes from the link below
+# https://www.briancallander.com/categories/bda3
+ex1 <- tibble(
+  theta = seq(0, 1, 0.01),
+  prior = theta^3 * (1 - theta)^3,
+  posterior = prior * (
+    choose(10, 0) * theta^0 * (1 - theta)^10 +
+    choose(10, 1) * theta^1 * (1 - theta)^9 +
+    choose(10, 2) * theta^2 * (1 - theta)^8
+  )
+)
+plot(ex1$posterior)
+
+# use stan
+ex02_01.stan <- "
+transformed data {
+  int tosses = 10;
+  int max_heads = 2;
+}
+
+parameters {
+  real<lower = 0, upper = 1> theta;
+}
+
+model {
+  theta ~ beta(4, 4); // prior
+  target += binomial_lcdf(max_heads | tosses, theta); // likelihood
+} "
+
+m1 <- stan_model(model_code = ex02_01.stan)
+f1 <- sampling(m1, iter=40000, warmup=1000, chains=1)
+print(f1)
+#        mean se_mean   sd  2.5%   25%   50%   75% 97.5% n_eff Rhat
+# theta  0.30    0.00 0.11  0.11  0.22  0.30  0.38  0.54 14167    1
+# lp__  -7.72    0.01 0.73 -9.81 -7.89 -7.45 -7.26 -7.20 13721    1

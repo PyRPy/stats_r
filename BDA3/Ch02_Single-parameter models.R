@@ -6,6 +6,8 @@ theme_set(theme_minimal())
 library(gridExtra)
 library(tidyr)
 library(dplyr)
+library(scales)
+library(knitr)
 
 
 # 2.1 Estimating a probability from binomial data -------------------------
@@ -142,3 +144,28 @@ print(f1)
 #        mean se_mean   sd  2.5%   25%   50%   75% 97.5% n_eff Rhat
 # theta  0.30    0.00 0.11  0.11  0.22  0.30  0.38  0.54 14167    1
 # lp__  -7.72    0.01 0.73 -9.81 -7.89 -7.45 -7.26 -7.20 13721    1
+
+
+# Exercise 2.3 ------------------------------------------------------------
+# binomial approximation by normal distribution
+# roll a dice for 1000 times, what's the number of getting 6
+# normal approximation
+N <- 1000
+p <- 1 / 6
+mu <- N * p
+sigma <- sqrt(N * p * (1 - p))
+
+ex3 <- tibble(
+  y = seq(0, N),
+  binomial = dbinom(y, N, p),
+  normal_approx = dnorm(y, mu, sigma)
+) %>%
+  gather(metric, probability, -y)
+
+percentiles <- c(0.05, 0.25, 0.5, 0.75, 0.95)
+
+tibble(
+  percentile = scales::percent(percentiles),
+  binom = qbinom(percentiles, N, p),
+  norm = round(qnorm(percentiles, mu, sigma), 1)
+) %>% kable()

@@ -82,3 +82,84 @@ hist(df1$pm_mu)
 hist(df1$pm_mu_pos)
 hist(y[y>0])
 
+
+# 3.7 Example: analysis of a bioassay experiment --------------------------
+# https://avehtari.github.io/BDA_R_demos/demos_ch3/demo3_6.html
+# Data
+df1 <- data.frame(
+  x = c(-0.86, -0.30, -0.05, 0.73),
+  n = c(5, 5, 5, 5),
+  y = c(0, 1, 3, 5)
+)
+
+# plot data
+ggplot(df1, aes(x=x, y=y)) +
+  geom_point(size=2, color='red') +
+  scale_x_continuous(breaks = df1$x, minor_breaks=NULL, limits = c(-1.5, 1.5)) +
+  scale_y_continuous(breaks = 0:5, minor_breaks=NULL) +
+  labs(title = 'Bioassay', x = 'Dose (log g/ml)', y = 'Number of deaths')
+
+# Compute the posterior density in grid
+A = seq(-4, 8, length.out = 50)
+B = seq(-10, 40, length.out = 50)
+
+# Make vectors that contain all pairwise combinations of A and B
+cA <- rep(A, each = length(B))
+cB <- rep(B, length(A))
+
+# Make a helper function to calculate the log likelihood given a
+# dataframe with x, y, and n and evaluation points a and b
+logl <- function(df, a, b)
+  df['y']*(a + b*df['x']) - df['n']*log1p(exp(a + b*df['x']))
+
+# Calculate likelihoods: apply logl function for each observation ie.
+# each row of data frame of x, n and y
+# --- very nicely done --- #
+p <- apply(df1, 1, logl, cA, cB) %>%
+  # sum the log likelihoods of observations
+  # and exponentiate to get the joint likelihood
+  rowSums() %>% exp()
+
+# Sample from the grid (with replacement)
+nsamp <- 1000
+samp_indices <- sample(length(p), size = nsamp,
+                       replace = T, prob = p/sum(p))
+samp_A <- cA[samp_indices[1:nsamp]]
+samp_B <- cB[samp_indices[1:nsamp]]
+
+# Add random jitter,
+samp_A <- samp_A + runif(nsamp, (A[1] - A[2])/2, (A[2] - A[1])/2)
+samp_B <- samp_B + runif(nsamp, (B[1] - B[2])/2, (B[2] - B[1])/2)
+
+# Create data frame
+samps <- data_frame(ind = 1:nsamp, alpha = samp_A, beta = samp_B) %>%
+  mutate(ld50 = - alpha/beta)
+
+# Create a plot of the posterior density
+# limits for the plots
+xl <- c(-2, 8)
+yl <- c(-2, 40)
+pos <- ggplot(data = data.frame(cA ,cB, p), aes(cA, cB)) +
+  geom_raster(aes(fill = p, alpha = p), interpolate = T) +
+  geom_contour(aes(z = p), colour = 'black', size = 0.2) +
+  coord_cartesian(xlim = xl, ylim = yl) +
+  labs(title = 'Posterior density evaluated in grid', x = 'alpha', y = 'beta') +
+  scale_fill_gradient(low = 'yellow', high = 'red', guide = F) +
+  scale_alpha(range = c(0, 1), guide = F)
+
+# Plot of the samples
+sam <- ggplot(data = samps) +
+  geom_point(aes(alpha, beta), color = 'blue') +
+  coord_cartesian(xlim = xl, ylim = yl) +
+  labs(title = 'Posterior draws', x = 'alpha', y = 'beta')
+
+# Combine the plots
+grid.arrange(pos, sam, nrow=2)
+
+# Plot of the histogram of LD50
+his <- ggplot(data = samps) +
+  geom_histogram(aes(ld50), binwidth = 0.02,
+                 fill = 'steelblue', color = 'black') +
+  coord_cartesian(xlim = c(-0.5, 0.5)) +
+  labs(x = 'LD50 = -alpha/beta')
+his

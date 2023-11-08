@@ -141,3 +141,62 @@ ggplot(data = Tyr) +
   labs(x = TeX(r"(Number of changes in $\textit{y}$ and  $\textit{y}^{ \textrm{rep}}$)"),
        y = '', title = title1) +
   scale_y_continuous(breaks=NULL)
+
+
+# Marginal predictive checks ----------------------------------------------
+# https://avehtari.github.io/BDA_R_demos/demos_ch6/demo6_4.html
+# Marginal posterior predictive checking
+# Data
+y <- read.table("BDA3_Data/light.txt")$V1
+
+# Sufficient statistics
+n <- length(y)
+s <- sd(y)
+my <- mean(y)
+
+# Tail area probabilities of marginal predictive distributions,
+# aka probability integral transformation (PIT)
+Ty <- data.frame(x = pt((y - my)/(sqrt(1+1/n)*s), n-1))
+hist(Ty$x)
+plot(Ty$x)
+
+# Plot histogram of PIT values. Ideally histogram should be close to uniform.
+title1 <- 'Light speed example
+distribution of predictive distribution tail-values'
+
+ggplot(data = Ty) +
+  geom_histogram(aes(x = x), fill = 'steelblue',
+                 color = 'black', binwidth = 0.05) +
+  coord_cartesian(xlim = c(0, 1)) +
+  labs(x = TeX(r"($\textit{p}(\textit{y}^{\textrm{rep}}_{\textit{i}} < \textit{y_i} | \textit{y})$)"),
+       y = '', title = title1) +
+  scale_y_continuous(breaks=NULL)
+
+# Plot ECDF of PIT values. Ideally ECDF should be close to diagonal line
+ggplot(data=data.frame(x=Ty), aes(x)) +
+  stat_ecdf(geom = "step", color=4) +
+  xlim(c(0,1))+
+  labs(x="Observed PIT values", y="ECDF")+
+  annotate(geom="segment",x=0,y=0,xend=1,yend=1)
+
+# Repeat the PIT checking after removing two “outliers”
+y <- y[y>0]
+n <- length(y)
+s <- sd(y)
+my <- mean(y)
+Ty <- data.frame(x = pt((y - my)/(sqrt(1+1/n)*s), n-1))
+title1 <- 'Light speed example
+distribution of predictive distribution tail-values'
+ggplot(data = Ty) +
+  geom_histogram(aes(x = x), fill = 'steelblue',
+                 color = 'black', binwidth = 0.05) +
+  coord_cartesian(xlim = c(0, 1)) +
+  labs(x = TeX(r"($\textit{p}(\textit{y}^{\textrm{rep}}_{\textit{i}} < \textit{y_i} | \textit{y})$)"),
+       y = '', title = title1) +
+  scale_y_continuous(breaks=NULL)
+
+ggplot(data=data.frame(x=Ty), aes(x)) +
+  stat_ecdf(geom = "step", color=4) +
+  xlim(c(0,1))+
+  labs(x="Observed PIT values", y="ECDF")+
+  annotate(geom="segment",x=0,y=0,xend=1,yend=1)

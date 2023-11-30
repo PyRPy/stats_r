@@ -209,3 +209,86 @@ loo_compare(loo(brm_glmm1znb),looznb)
 
 # reference and future readings
 # https://users.aalto.fi/~ave/modelselection/roaches.html
+
+
+# Bayesian Logistic Regression with rstanarm ------------------------------
+library(tidyverse)
+library(caret)
+library(GGally)
+library(ggplot2)
+library(corrplot)
+library(bayesplot)
+theme_set(bayesplot::theme_default(base_family = "sans"))
+library(rstanarm)
+options(mc.cores = 1)
+library(loo)
+library(projpred)
+SEED=14124869
+
+# Diabetes data
+# file preview shows a header row
+diabetes <- read.csv("BDA3_Data/diabetes.csv", header = TRUE)
+str(diabetes)
+
+# Pre-processing
+# removing those observation rows with 0 in any of the variables
+for (i in 2:6) {
+  diabetes <- diabetes[-which(diabetes[, i] == 0), ]
+}
+# scale the covariates for easier comparison of coefficient posteriors
+for (i in 1:8) {
+  diabetes[i] <- scale(diabetes[i])
+}
+
+# modify the data column names slightly for easier typing
+names(diabetes)[7] <- "dpf"
+names(diabetes) <- tolower(names(diabetes))
+
+n=dim(diabetes)[1]
+p=dim(diabetes)[2]
+str(diabetes)
+print(paste0("number of observations = ", n))
+print(paste0("number of predictors = ", p))
+
+# Plot correlation structure
+corrplot(cor(diabetes[, c(9,1:8)]))
+
+# Make outcome to be factor type and create x and y variables
+diabetes$outcome <- factor(diabetes$outcome)
+
+# preparing the inputs
+x <- model.matrix(outcome ~ . - 1, data = diabetes)
+y <- diabetes$outcome
+(model_formula <- formula(paste("outcome ~", paste(names(diabetes)[1:(p-1)], collapse = " + "))))
+
+# A Bayesian logistic regression model
+t_prior <- student_t(df = 7, location = 0, scale = 2.5)
+post1 <- stan_glm(model_formula, data = diabetes,
+                  family = binomial(link = "logit"),
+                  prior = t_prior, prior_intercept = t_prior, QR=TRUE,
+                  seed = SEED, refresh=0)
+
+pplot<-plot(post1, "areas", prob = 0.95, prob_outer = 1)
+pplot+ geom_vline(xintercept = 0)
+
+#  median and 90% intervals
+round(coef(post1), 2)
+round(posterior_interval(post1, prob = 0.9), 2)
+
+# Leave-one-out cross-validation
+loo1 <- loo(post1, save_psis = TRUE)
+
+# Comparison to a baseline model
+post0 <- update(post1, formula = outcome ~ 1, QR = FALSE, refresh=0)
+loo0 <- loo(post0)
+loo_compare(loo0, loo1)
+
+# Other predictive performance measures
+# Predicted probabilities
+linpred <- posterior_linpred(post1)
+preds <- posterior_epred(post1)
+pred <- colMeans(preds)
+pr <- as.integer(pred >= 0.5)
+
+# posterior classification accuracy
+round(mean(xor(pr,as.integer(y==0))),2)

@@ -59,6 +59,8 @@ for (m in 1:chains){
 # check the mixing of the sequence
 monitor(sims) # this function is from 'rstan' package
 
+# need to longer iteration to reduce R below 1.05
+
 # results from this run
 #             Q5  Q50  Q95 Mean   SD  Rhat Bulk_ESS Tail_ESS
 # theta[1]   0.2 13.8 36.2 15.5 11.1  1.00      556     2862

@@ -72,3 +72,51 @@ hist(y_pred)
 # Comparison to lm()
 M1a <- lm(vote ~ growth, data=hibbs)
 summary(M1a)
+
+# fit a line iwth zero intercept y = bx
+M0 <- stan_glm(vote ~ -1 + growth, data = hibbs, refresh = 0)
+print(M0)
+
+# Checking using fake-data simulation -------------------------------------
+# Step 1: Creating the pretend world
+a <- 46.3
+b <- 3.0
+sigma <- 3.9
+x <- hibbs$growth
+n <- length(x)
+
+# Step 2: Simulating fake data
+y <- a + b*x + rnorm(n, 0, sigma)
+fake <- data.frame(x, y)
+
+# Step 3: Fitting the model and comparing fitted to assumed values
+fit <- stan_glm(y ~ x, data = fake)
+print(fit)
+
+# check the coefficients
+b_hat <- coef(fit)["x"]
+b_se <- se(fit)["x"]
+cover_95 <- abs(b-b_hat) < 2*b_se
+cat(paste("95% coverage: ", cover_95))
+
+
+# Formulating comparisons as regression models ----------------------------
+
+# Estimating the mean is the same as regressing on a constant term
+n_0 <- 20
+
+# set the random seed to get reproducible results
+# change the seed to experiment with variation due to random noise
+set.seed(2023)
+y_0 <- rnorm(n_0, 2.0, 5.0)
+fake_0 <- data.frame(y_0)
+round(y_0, 1)
+
+# check the mean and sd
+round(mean(y_0), 2)
+round(sd(y_0)/sqrt(n_0), 2)
+
+# Estimating the mean is the same as regressing on a constant term
+fit_2 <- stan_glm(y_0 ~ 1, data = fake_0, seed=2141, refresh = 0,
+                  prior_intercept = NULL, prior = NULL, prior_aux = NULL)
+print(fit_2)

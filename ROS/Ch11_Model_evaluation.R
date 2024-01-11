@@ -70,3 +70,52 @@ print(quantile(test_rep, c(.1,.5,.9)))
 # Plot test statistic for data and histogram of test statistics for replications
 ppc_stat(y=unemp$y, yrep=y_rep, stat=test, binwidth = 1) +
   scale_y_continuous(breaks=NULL)
+
+
+# Leave-one-out cross validation ------------------------------------------
+# a small simulated dataset
+x <- 1:20
+n <- length(x)
+a <- 0.2
+b <- 0.3
+sigma <- 1
+# set the random seed to get reproducible results
+# change the seed to experiment with variation due to random noise
+set.seed(2141)
+y <- a + b*x + sigma*rnorm(n)
+fake <- data.frame(x, y)
+
+# Fit linear model
+fit_all <- stan_glm(y ~ x, data = fake, seed=2141, chains=10, refresh=0)
+
+# Fit linear model without 18th observation
+fit_minus_18 <- stan_glm(y ~ x, data = fake[-18,], seed=2141, refresh=0)
+
+loo_1 <- loo(fit_all)
+loo_2 <- loo(fit_minus_18)
+print(loo_1)
+print(loo_2)
+
+
+# K-fold cross validation using simulated data ----------------------------
+library("MASS")
+k <- 30
+rho <- 0.8 # correlation at 0.8
+Sigma <- rho*array(1, c(k,k)) + (1-rho)*diag(k)
+X <- mvrnorm(n, rep(0,k), Sigma)
+
+b <- c(c(-1,1,2), rep(0, k-3))
+y <- X %*% b + 2*rnorm(n)
+fake <- data.frame(X, y)
+
+# fit linear regression using a weak prior distribution
+fit_1 <- stan_glm(y ~ ., prior=normal(0, 10), data=fake)
+loo_1 <- loo(fit_1) # warning  on pareto_k > 0.7.
+
+kfold_1 <- kfold(fit_1, K=10)
+print(kfold_1)
+
+# using a more informative prior
+fit_2 <- update(fit_1, prior=hs())
+kfold_2 <- kfold(fit_2, K=10)
+loo_compare(kfold_1, kfold_2)

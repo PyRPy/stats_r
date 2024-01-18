@@ -43,3 +43,39 @@ postpred <- posterior_predict(fit_1, newdata=new)
 head(postpred)
 print(c(mean(postpred), sd(postpred)), digits=2)
 
+# Series of regressions for different years
+yrs <- seq(1952, 2000, 4)
+n_yrs <- length(yrs)
+fits <- array(NA, c(n_yrs, 3), dimnames <- list(yrs, c("year", "coef", "se")))
+
+for (j in 1:n_yrs){
+  yr <- yrs[j]
+  ok <- (nes$year==yr & !is.na(nes$presvote) & nes$presvote<3 &
+           !is.na(nes$vote) & !is.na(nes$income))
+  vote <- nes$presvote[ok] - 1
+  income <- nes$income[ok]
+  fit_y <- stan_glm(vote ~ income, family=binomial(link="logit"),
+                    data = data.frame(vote, income),
+                    warmup = 500, iter = 1500, refresh = 0,
+                    save_warmup = FALSE, cores = 1, open_progress = FALSE)
+  fits[j,] <- c(yr, coef(fit_y)[2], se(fit_y)[2])
+}
+
+# Plot the series of regression
+par(mar=c(3,2.5,1,.2), tck=-.01, mgp=c(1.5, .3, 0))
+plot (fits[,"year"], fits[,"coef"], xlim=c(1950,2000), ylim=range(fits[,"coef"]-fits[,"se"], fits[,"coef"]+fits[,"se"]),
+      pch=20, ylab="Coefficient of income", xlab="Year", bty="l")
+for (j in 1:n_yrs){
+  lines(rep(fits[j,"year"], 2), fits[j,"coef"] + fits[j,"se"]*c(-1,1), lwd=.5)
+}
+abline(0,0,lwd=.5, lty=2)
+
+# Estimate the with-in sample predictive accuracy
+predp <- fitted(fit_1)
+round(c(mean(predp[nes92$rvote==1]), mean(1-predp[nes92$rvote==0])), 3)
+
+# predictive performance of a model using within-sample log-score
+round(sum(log(c(predp[nes92$rvote==1], 1-predp[nes92$rvote==0]))), 1)
+
+#  leave-one-out log-score
+loo(fit_1)

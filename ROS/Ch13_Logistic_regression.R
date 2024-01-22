@@ -79,3 +79,48 @@ round(sum(log(c(predp[nes92$rvote==1], 1-predp[nes92$rvote==0]))), 1)
 
 #  leave-one-out log-score
 loo(fit_1)
+
+
+# Wells switch decision ---------------------------------------------------
+
+# data
+wells <- read.csv("ROS_Data/wells.csv")
+head(wells)
+
+# Log-score for coin flipping
+prob <- 0.5
+round(log(prob)*sum(wells$switch) + log(1-prob)*sum(1-wells$switch),1)
+
+# Log-score for intercept model
+round(prob <- mean(wells$switch),2)
+round(log(prob)*sum(wells$switch) + log(1-prob)*sum(1-wells$switch),1)
+
+# Fit a model using distance to the nearest safe well
+fit_1 <- stan_glm(switch ~ dist, family = binomial(link = "logit"), data=wells)
+print(fit_1, digits=3)
+
+# LOO log score
+(loo1 <- loo(fit_1))
+
+# Scale distance in meters to distance in 100 meters
+wells$dist100 <- wells$dist/100
+
+# Fit a model using scaled distance to the nearest safe well
+fit_2 <- stan_glm(switch ~ dist100, family = binomial(link = "logit"), data=wells)
+print(fit_2, digits=2)
+(loo2 <- loo(fit_2, save_psis = TRUE))
+
+# Two predictors
+# Fit a model using scaled distance and arsenic level
+fit_3 <- stan_glm(switch ~ dist100 + arsenic, family = binomial(link = "logit"),
+                  data=wells)
+(loo3 <- loo(fit_3, save_psis = TRUE))
+
+# Compare models
+loo_compare(loo2, loo3)
+
+# Average improvement in LOO predictive probabilities
+# from dist100 to dist100 + arsenic
+pred2 <- loo_predict(fit_2, psis_object = loo2$psis_object)$value
+pred3 <- loo_predict(fit_3, psis_object = loo3$psis_object)$value
+round(mean(c(pred3[wells$switch==1]-pred2[wells$switch==1],pred2[wells$switch==0]-pred3[wells$switch==0])),3)

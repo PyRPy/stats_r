@@ -45,3 +45,25 @@ for (k in 1:K) {
 }
 par(mfrow=c(1, 1))
 
+
+# 15.3 Logistic-binomial model --------------------------------------------
+# We demonstrate with a simple model of basketball shooting. We first
+# simulate N = 100 players each shooting n = 20 shots, where the
+# probability of a successful shot is a linear function of
+# height(30% for a 5'9" player, 40% for a 6' tall player, and so forth):
+N <- 100
+height <- rnorm(N, 72, 3)
+p <- 0.4 + 0.1 * (height - 72) / 3
+n <- rep(20, N)
+y <- rbinom(N, n, p)
+data <- data.frame(n=n, y=y, height=height)
+
+# n fit and display a logistic regression predicting success
+# probability given height
+fit_1a <- stan_glm(cbind(y, n-y) ~ height, family = binomial(link = "logit"),
+                   data = data)
+print(fit_1a)
+#             Median MAD_SD
+# (Intercept) -10.4    1.2
+# height        0.1    0.0
+

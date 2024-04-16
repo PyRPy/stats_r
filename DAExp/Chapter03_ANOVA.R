@@ -81,3 +81,25 @@ contrast(emmodel, list(
 
 # Tukey adjustment for all pairs comparison
 pairs(emmodel, adjust="tukey")
+
+
+# Determining Sample Size -------------------------------------------------
+
+library(pwr)
+w <- c(575, 600, 650, 675)
+a <- length(w)
+sigma <- 25
+f <- sqrt((1/a)* sum((w - mean(w))^2)) / sigma # effective sample size
+
+pwr.anova.test(k=4, f=f, n=3, sig.level=0.01)
+
+# power curve
+n <- seq(from=2, to=8, length.out=50)
+y <- pwr.anova.test(k=4, f=f, sig.level=0.01, n=n)$power
+plot(n, y, type='l',
+     main='Power for Example 3.1',
+     xlab='Sample Size',
+     ylab='Power')
+
+# 90% power would require a sample size of 4 at each group (16 overall)
+pwr.anova.test(k=4, f=f, sig.level=0.01, power=0.9)

@@ -103,3 +103,52 @@ plot(n, y, type='l',
 
 # 90% power would require a sample size of 4 at each group (16 overall)
 pwr.anova.test(k=4, f=f, sig.level=0.01, power=0.9)
+
+# Chocolate Consumption and antioxidant regarding human health
+boxplot(Observation ~ Factor, data=Table3.12)
+
+# general significance test
+summary(aov(Observation ~ Factor, data=Table3.12))
+
+# individual effects we use a linear model without an intercept
+means.model <- lm(Observation ~ Factor - 1, data=Table3.12)
+print(summary(means.model))
+
+# confidence intervals for each chocolate level
+confint(means.model)
+
+# all pairwise comparisons
+library(emmeans)
+pairwise.model <- pairs(emmeans(aov(Observation ~ Factor,
+                                    data=Table3.12), ~Factor), adjust='none')
+print(pairwise.model)
+
+# point estimates with confidence intervals for difference
+confint(pairwise.model)
+
+
+# Random Effects Model ----------------------------------------------------
+# model the looms as a population
+model <- aov(Strength ~ Error(Looms), data=Example3.10)
+summary(model)
+
+# random error model
+library(lme4)
+library(lmerTest)
+model <- lmer(
+  Strength ~ (1|Looms),
+  data=Example3.10,
+  REML=TRUE
+)
+print(summary(model))
+
+print(rand(model))
+
+# CI for variance components
+confint(model, oldNames=FALSE)
+
+
+# non-parametric Kruskal-Wallis test --------------------------------------
+
+kruskal.test(Observation ~ Power, data=Table3.1)
+

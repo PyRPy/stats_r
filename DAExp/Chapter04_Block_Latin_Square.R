@@ -37,3 +37,15 @@ model <- lmer(
 print(summary(model))
 print(rand(model))
 confint(model, oldNames=FALSE)
+
+
+# Rocket propellant example -----------------------------------------------
+head(Table4.9)
+y <- Table4.9$BurnRate - 25
+model <- aov(y ~ Error(Batch + Operator) + Formulation, data=Table4.9)
+summary(model)
+
+library(agricolae)
+trt <- c("A", "B", "C", "D")
+outdesign <- design.lsd(trt)
+print(outdesign$sketch)

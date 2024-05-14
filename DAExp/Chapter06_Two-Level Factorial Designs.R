@@ -48,3 +48,13 @@ y <- seq(from=-1, to=1, length.out=100)
 df <- expand.grid('A'=x, 'B'=y)
 z <- matrix(predict(model, df), nrow=length(x))
 contour(x=x, y=y, z=z, add=TRUE)
+
+
+# Plasma Etching ----------------------------------------------------------
+# 2 x 2 x 2 design
+head(Table6.4)
+model <- aov(EtchRate ~ Gap * Flow * Power, data=Table6.4)
+summary(model)
+
+# effect estimates
+2*coef(model)[-1]

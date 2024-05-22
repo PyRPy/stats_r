@@ -58,3 +58,37 @@ summary(model)
 
 # effect estimates
 2*coef(model)[-1]
+
+
+# Filtration Rate ---------------------------------------------------------
+head(Table6.10)
+
+# normal aov will not give error terms
+model <- aov(Filtration ~ Temperature * Pressure * Formaldehyde * StirringRate,
+             data=Table6.10)
+summary(model)
+
+# create a normal probability plot based on the effect
+df <- Table6.10
+colnames(df) <- c('A', 'B', 'C', 'D', 'Filtration', 'Block')
+X <- model.matrix(~ -1 + A*B*C*D, data=df)
+effects <- apply(X, 2, function(w){ sum((w*df$Filtration) / (0.5 * dim(df)[1])) })
+names(effects) <- colnames(X)
+effects
+
+# normal plot
+locs <- qqnorm(effects, main='Normal Probability Plot')
+qqline(effects, col='orange')
+ix <- c(1,3,4,6,8)
+text(x=locs$x[ix], y=locs$y[ix], labels=names(effects[ix]), pos=c(2, 4, 4, 4, 4))
+
+# half normal plot
+library(DoE.base)
+Fo <- Table6.10$Formaldehyde
+Te <- Table6.10$Temperature
+St <- Table6.10$StirringRate
+Pr <- Table6.10$Pressure
+Fi <- Table6.10$Filtration
+model <- aov(Fi ~ Te * Pr * Fo * St, data=Table6.10)
+vals <- halfnormal(model, alpha=0.05)
+print(vals$signif)

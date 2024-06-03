@@ -92,3 +92,39 @@ Fi <- Table6.10$Filtration
 model <- aov(Fi ~ Te * Pr * Fo * St, data=Table6.10)
 vals <- halfnormal(model, alpha=0.05)
 print(vals$signif)
+
+
+# Data Transformation in a Factorial Design -------------------------------
+library(DoE.base)
+head(Example6.3)
+# drill rate with other four factors
+model <- lm(DrillRate ~ .*.*.*., data=Example6.3)
+vals <- halfnormal(model)
+print(vals$signif) # three effects are significant
+
+# ignore factor 'load'
+model2 <- aov(DrillRate ~ Mud + RotationalSpeed + FlowRate +
+              FlowRate:Mud + FlowRate:RotationalSpeed,
+              data=Example6.3)
+summary(model2)
+
+# check residues
+plot(predict(model2), resid(model2)) # show unequal variance
+
+# transform function - log on drill rate
+df <- Example6.3
+df[,'DrillRate'] <- log(df[,'DrillRate'])
+model3 <- lm(DrillRate ~ .*.*.*., data=df)
+vals <- halfnormal(model3)
+
+print(vals$signif) # still same three effects show significance
+model4 <- lm(DrillRate ~ FlowRate * RotationalSpeed * Mud, data=df)
+anova(model4)
+
+# fit the main-effects-only model and check for normality of the residuals
+model4 <- lm(DrillRate ~ FlowRate + RotationalSpeed + Mud, data=df)
+qqnorm(resid(model4))
+qqline(resid(model4), col='orange')
+
+# check residues
+plot(predict(model4), resid(model4)) # show unequal variance

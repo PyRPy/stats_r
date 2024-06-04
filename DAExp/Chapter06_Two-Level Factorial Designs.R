@@ -162,3 +162,31 @@ Fi.star <- apply(
 vals <- halfnormal(Fi.star)
 
 
+# Duplicate Measurements on the Response ----------------------------------
+
+head(Table6.18) # long format, different than table in textbook
+df <- aggregate(OxideThickness ~ ., data=Table6.18, FUN=mean)
+df[,'SampleVariance'] <- aggregate(OxideThickness ~ ., data=Table6.18,
+                                   FUN=var)[,'OxideThickness']
+model <- lm(OxideThickness ~ Temperature * Time * Pressure * GasFlow, data=df)
+model.ss <- anova(model)[['Sum Sq']]
+effect.estimates <- data.frame(
+  'EffectEstimate'=2 * coef(model)[-1],
+  'SumOfSquares'=model.ss[-1],
+  'Contribution'=sprintf('%0.2f%%',
+                         100*model.ss[-1]/sum(model.ss[-1]))
+)
+effect.estimates
+
+vals <- halfnormal(model)
+
+# reduced model with significant effects
+model2 <- lm(OxideThickness ~ Temperature + Time + Temperature:Time +
+               Pressure + Temperature:Pressure, data=df)
+anova(model2)
+summary(model2)
+
+# log transform of the sample variance
+Y <- log(df[,'SampleVariance'])
+model <- lm(Y ~ Temperature * Time * Pressure * GasFlow, data=df)
+vals <- halfnormal(model) # no strong effects observed

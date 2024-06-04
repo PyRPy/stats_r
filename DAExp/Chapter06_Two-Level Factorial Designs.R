@@ -128,3 +128,37 @@ qqline(resid(model4), col='orange')
 
 # check residues
 plot(predict(model4), resid(model4)) # show unequal variance
+
+
+# — Location and Dispersion Effects in an Unreplicated Factorial ----------
+# how to reduce the number of defects
+library(DoE.base)
+head(Example6.4)
+model <- lm(Defects ~ .*.*.*., data=Example6.4)
+vals <- halfnormal(model) # Temperature and ResinFlow significant
+
+model2 <- lm(Defects ~ Temperature * ResinFlow, data=Example6.4)
+anova(model2) # interaction not significant
+
+# include main effects only
+model2 <- lm(Defects ~ Temperature + ResinFlow, data=Example6.4)
+
+# check clamp time vs residues
+plot(Example6.4$ClampTime, resid(model2)) # equal variance not true
+
+ix <- Example6.4$ClampTime == 1   # not used?
+X <- model.matrix(Defects ~ -1 + . * . * . * ., data=Example6.4)
+Fi.star <- apply(
+  X,
+  2,
+  function(w){
+    log(
+      sd(resid(model2)[w == 1])^2
+      /
+        sd(resid(model2)[w != 1])^2
+    )
+  }
+)
+vals <- halfnormal(Fi.star)
+
+

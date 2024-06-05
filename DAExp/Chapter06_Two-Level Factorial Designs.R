@@ -190,3 +190,53 @@ summary(model2)
 Y <- log(df[,'SampleVariance'])
 model <- lm(Y ~ Temperature * Time * Pressure * GasFlow, data=df)
 vals <- halfnormal(model) # no strong effects observed
+
+
+# Credit Card Marketing ---------------------------------------------------
+library(DoE.base)
+head(Table6.22) # direct mail response rate
+
+model <- lm(ResponseRate ~ .*.*.*., data=Table6.22)
+vals <- halfnormal(model, alpha=0.1)
+
+model <- lm(
+  ResponseRate ~ AnnualFee + AccountOpeningFee + InitialInterestRate
+  + LongTermInterestRate + AnnualFee:AccountOpeningFee,
+  data=Table6.22
+)
+summary(model)
+
+
+# add center points -------------------------------------------------------
+str(Table6.10)
+# add additional data points
+Example6.7 <- rbind(
+  Table6.10,
+  c(0, 0, 0, 0, 73, NA),
+  c(0, 0, 0, 0, 75, NA),
+  c(0, 0, 0, 0, 66, NA),
+  c(0, 0, 0, 0, 69, NA)
+)
+model1 <- lm(Filtration ~
+               Temperature*Pressure*Formaldehyde*StirringRate, data=Example6.7)
+model2 <- lm(Filtration ~
+               Temperature*Pressure*Formaldehyde*StirringRate + I(Temperature^2)
+             + I(Pressure^2) + I(Formaldehyde^2) + I(StirringRate^2),
+             data=Example6.7)
+
+
+
+anova(model1, model2) # no difference, quadratic term not significant
+
+
+# Coded Design Variables --------------------------------------------------
+
+# coded units vs engineering unit / natural units
+head(Table6.25)
+model <- lm(V ~ I * R, data=Table6.25) # with natural units
+summary(model)
+
+model <- lm(V ~ x1 * x2, data=Table6.25) # with coded units
+summary(model) # pay attention to coefficients std error
+
+

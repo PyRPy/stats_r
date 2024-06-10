@@ -48,3 +48,10 @@ model <- aov(Filtration ~ Error(Block) + Temperature + Formaldehyde +
                StirringRate + Temperature:Formaldehyde +
                Temperature:StirringRate, data=df)
 summary(model)
+
+
+# plasma etching experiment -----------------------------------------------
+
+head(Table6.4)
+model <- aov(EtchRate ~ Error(Block) + Gap * Flow * Power, data=Table6.4)
+summary(model)

@@ -22,3 +22,29 @@ summary(model) # blocking not significant
 rand(model)
 confint(model, oldNames=FALSE) #main effects and for the variance components
 
+
+# Filtration example with blocking ----------------------------------------
+library(DoE.base)
+head(Table6.10)
+df <- Table6.10
+df[df$Block == 1, 'Filtration'] <- df[df$Block == 1, 'Filtration'] - 20
+
+model <- aov(Filtration ~ Temperature * Pressure * Formaldehyde * StirringRate,
+             data=Table6.10)
+model.ss <- anova(model)[['Sum Sq']]
+effect.estimates <- data.frame(
+  'EffectEstimate'=2 * coef(model)[-1],
+  'SumOfSquares'=model.ss[-1],
+  'Contribution'=sprintf('%0.2f%%', 100*model.ss[-1]/sum(model.ss[-1]))
+)
+
+# display the table
+effect.estimates
+
+# choose the largest contributions and reduce the model.
+# include blocking into error terms
+
+model <- aov(Filtration ~ Error(Block) + Temperature + Formaldehyde +
+               StirringRate + Temperature:Formaldehyde +
+               Temperature:StirringRate, data=df)
+summary(model)

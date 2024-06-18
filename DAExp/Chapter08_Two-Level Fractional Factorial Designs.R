@@ -83,3 +83,31 @@ Fi.star <- apply(
   }
 )
 vals <- halfnormal(Fi.star)
+
+
+# Machinery deviations  ---------------------------------------------------
+# Example 8.6 two 8-3 IV design
+head(Table8.16)
+
+model <- aov(log(Deviation) ~ Error(Block) + (A + B + C + D + E + F + G + H)^3,
+             data=Table8.16)
+print(summary(model)) # error - block, error - within
+
+model.ss <- summary(model$Within)[[1]][['Sum Sq']]
+coef.est <- coef(model$Within)
+effect.estimates <- data.frame(
+  'EffectEstimate'=2 * coef.est,
+  'SumOfSquares'=model.ss,
+  'Contribution'=sprintf('%0.2f%%', 100*model.ss/sum(model.ss))
+)
+effect.estimates # field knowledge chooses A, B, D, and A:D
+
+model <- aov(log(Deviation) ~ (A + B + C + D + E + F + G + H)^3,
+             data=Table8.16) # remove error terms
+vals <- halfnormal(model)
+
+# remodel using A, B, D, A:D
+model <- aov(log(Deviation) ~ Error(Block) + A + B + D + A:D,
+             data=Table8.16)
+print(summary(model))
+

@@ -111,3 +111,28 @@ model <- aov(log(Deviation) ~ Error(Block) + A + B + D + A:D,
              data=Table8.16)
 print(summary(model))
 
+
+# Eye focus experiment ----------------------------------------------------
+# foldover conceppt, 2 k = 7-4, III experiment
+# check the main effects
+model <- lm(Time ~ ., data=Table8.21)
+print(2*coef(model)[-1])
+
+# foldover
+df <- rbind(Table8.21, Table8.22)
+df
+model <- lm(Time ~ (A + B + D)^2, data=df)  # two order interactions
+summary(model) # Adjusted R-squared:  0.9889
+
+
+# Plackett and Burman designs ---------------------------------------------
+# 12 factors, 16 run, give us some idea of using minimal number of runs
+# to test maximum number of factors with acceptable results
+head(Table8.25)
+
+alpha.to.enter <- 0.10
+alpha.to.leave <- 0.10
+model <- lm(y~1, data=Table8.25)
+scope <- y ~ (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + X10 + X11 + X12)^2
+final.model <- p.stepwise(model, scope, alpha.to.enter, alpha.to.leave)
+summary(final.model)

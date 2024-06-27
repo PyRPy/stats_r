@@ -4,6 +4,7 @@
 library(MASS)
 library(MontgomeryDAE)
 library(FrF2)
+library(DoE.base)
 
 FrF2(nfactors=4, resolution=3) # fixed resolution
 FrF2(nfactors=5, nruns=8) # fixed runs
@@ -34,7 +35,6 @@ effect.estimates # check the term contribution to the overall variances
 
 # check active effects with a half-normal probability plot
 
-library(DoE.base)
 vals <- halfnormal(model)
 
 # fit the reduced model
@@ -136,3 +136,27 @@ model <- lm(y~1, data=Table8.25)
 scope <- y ~ (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + X10 + X11 + X12)^2
 final.model <- p.stepwise(model, scope, alpha.to.enter, alpha.to.leave)
 summary(final.model)
+
+
+# 6 factors impact on the coating thickness -------------------------------
+head(Table8.31)
+model <- lm(Thickness ~ . * ., data=Table8.31)
+vals <- halfnormal(model)
+
+vals$signif
+
+# A:B or C:E are significant, complete fold-over on A
+head(Table8.32)
+model <- lm(Thickness ~ Blocks + (A + B + C + D + E + F)^2, data=Table8.32)
+vals <- halfnormal(model)
+vals$signif # C:E significant
+
+# partial fold-over on A at its low level
+ix <- Table8.32[,'Blocks'] == 1 | (Table8.32[,'Blocks'] == 2 & Table8.32[,'A'] == -1)
+Table8.33 <- Table8.32[ix,]
+model <- lm(Thickness ~ Blocks + (A + B + C + D + E + F)^2, data=Table8.33)
+vals <- halfnormal(model, ME.partial=TRUE)
+
+# to remove 'block' as main effect
+model <- aov(Thickness ~ Error(Blocks) + (A + B + C + D + E + F)^2, data=Table8.33)
+print(summary(model)) # A:B interactoin is significant
